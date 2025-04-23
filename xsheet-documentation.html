@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation X-Sheet Documentation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --text-color: #2b2d42;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+        }
+        
+        .section-title {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+        }
+        
+        .feature-card {
+            border-top: 3px solid var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tips-card {
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .steps-container .step {
+            border-left: 2px solid #e5e7eb;
+            padding-bottom: 2rem;
+            position: relative;
+        }
+        
+        .steps-container .step:last-child {
+            border-left: 2px solid transparent;
+        }
+        
+        .steps-container .step::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            position: absolute;
+            left: -11px;
+            top: 0;
+        }
+        
+        .screenshot {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab {
+            cursor: pointer;
+            padding: 10px 20px;
+            margin: 0 5px;
+            background: #f8f9fa;
+            border-radius: 5px 5px 0 0;
+            border: 1px solid #e5e7eb;
+            border-bottom: none;
+        }
+        
+        .tab.active {
+            background: white;
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0 5px 5px 5px;
+            background: white;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .accordion-header {
+            cursor: pointer;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 0.25rem 0.25rem;
+            margin-top: -0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: white;
+        }
+        
+        .accordion-content-inner {
+            padding: 1rem;
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 20px;
+        }
+        
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .scroll-to-top.visible {
+            opacity: 1;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+        }
+        
+        /* Syntax highlighting for code blocks */
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1em;
+            border-radius: 0.3em;
+            overflow-x: auto;
+        }
+        
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+        
+        .key-command {
+            display: inline-block;
+            background-color: #f1f1f1;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            font-family: monospace;
+            font-size: 0.9em;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h18M3 16h18" />
+                </svg>
+                <span class="font-bold text-xl text-gray-800">Animation X-Sheet</span>
+            </div>
+            <ul class="hidden md:flex space-x-8">
+                <li><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a></li>
+                <li><a href="#getting-started" class="text-gray-600 hover:text-blue-600">Getting Started</a></li>
+                <li><a href="#tutorials" class="text-gray-600 hover:text-blue-600">Tutorials</a></li>
+                <li><a href="#faq" class="text-gray-600 hover:text-blue-600">FAQ</a></li>
+            </ul>
+            <div class="md:hidden">
+                <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-gradient text-white">
+        <div class="container mx-auto px-4 py-16 md:py-24">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Interactive Animation X-Sheet</h1>
+                    <p class="text-lg md:text-xl mb-8">A powerful tool for professional animators to plan, track, and synchronize animation with audio</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#getting-started" class="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300">Get Started</a>
+                        <a href="#tutorials" class="bg-transparent hover:bg-blue-700 text-white border border-white font-semibold py-2 px-6 rounded-lg transition duration-300">View Tutorials</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2">
+                    <img src="https://i.imgur.com/placeholder/800/500" alt="Animation X-Sheet Preview" class="rounded-lg shadow-xl">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- Sidebar Navigation -->
+            <aside class="md:w-1/4 sidebar">
+                <div class="sticky-nav bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4">Documentation</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#introduction" class="text-blue-600 hover:text-blue-800">Introduction</a></li>
+                        <li><a href="#features" class="text-gray-600 hover:text-blue-600">Key Features</a></li>
+                        <li><a href="#getting-started" class="text-gray-600 hover:text-blue-600">Getting Started</a></li>
+                        <li><a href="#ui-overview" class="text-gray-600 hover:text-blue-600">UI Overview</a></li>
+                        <li><a href="#audio-integration" class="text-gray-600 hover:text-blue-600">Audio Integration</a></li>
+                        <li><a href="#cell-operations" class="text-gray-600 hover:text-blue-600">Cell Operations</a></li>
+                        <li><a href="#keyboard-shortcuts" class="text-gray-600 hover:text-blue-600">Keyboard Shortcuts</a></li>
+                        <li><a href="#export-options" class="text-gray-600 hover:text-blue-600">Export Options</a></li>
+                        <li><a href="#tutorials" class="text-gray-600 hover:text-blue-600">Tutorials</a></li>
+                        <li><a href="#faq" class="text-gray-600 hover:text-blue-600">FAQ</a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="md:w-3/4">
+                <section id="introduction" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Introduction to Animation X-Sheet</h2>
+                    <p class="mb-4">The Interactive Animation X-Sheet is a modern digital adaptation of the traditional animation exposure sheet (or X-sheet), a crucial tool used by animators to plan and track the timing of movements, dialogue, sound effects, and camera work in animation production.</p>
+                    
+                    <p class="mb-4">Our web-based tool brings the traditional X-sheet into the digital age, with powerful features like audio integration, waveform visualization, cell selection, and easy export options. Whether you're working on 2D, 3D, or stop-motion animation, this tool will help you maintain precise timing and coordination between all elements of your animation.</p>
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                        <h3 class="font-semibold text-blue-800">What is an X-Sheet?</h3>
+                        <p>An exposure sheet (X-sheet) is a traditional animation planning document that breaks down animation into individual frames, allowing animators to coordinate actions, dialogue, and sound across time. Originally used for hand-drawn animation, X-sheets remain relevant for all animation styles because they provide a frame-by-frame roadmap of what happens when in your animation.</p>
+                    </div>
+                </section>
+
+                <section id="features" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Key Features</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-file-audio"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Audio Integration</h3>
+                            <p>Import audio files and visualize waveforms directly on your X-sheet, making it easy to sync animation with dialogue and sound effects.</p>
+                        </div>
+                        
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-text-height"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Phonetic Markers</h3>
+                            <p>Add phonetic markers to your audio for precise lip-syncing and sound-driven animation timing.</p>
+                        </div>
+                        
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-table-cells"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Multi-Cell Selection</h3>
+                            <p>Select multiple cells for efficient editing, copying, and pasting of content between frames.</p>
+                        </div>
+                        
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-file-export"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Export Options</h3>
+                            <p>Export your X-sheet as PDF or print it for use in traditional animation pipelines.</p>
+                        </div>
+                        
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-save"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Project Saving</h3>
+                            <p>Save your projects as JSON files or in browser storage to continue your work later.</p>
+                        </div>
+                        
+                        <div class="feature-card bg-white rounded-lg shadow-sm p-6">
+                            <div class="feature-icon">
+                                <i class="fas fa-expand"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Flexible Templates</h3>
+                            <p>Choose between standard 11"x17" (96 frames) or compact 8"x10" (48 frames) layouts.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="getting-started" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Getting Started</h2>
+                    
+                    <div class="steps-container pl-10">
+                        <div class="step">
+                            <h3 class="text-xl font-semibold mb-2">Step 1: Choose a Template</h3>
+                            <p class="mb-4">Start by selecting the appropriate template for your project from the dropdown menu at the top. You can choose between:</p>
+                            <ul class="list-disc ml-6 mb-4">
+                                <li><strong>11"x17" (96 Frames)</strong> - Standard full-size X-sheet for longer sequences</li>
+                                <li><strong>8"x10" (48 Frames)</strong> - Compact X-sheet for shorter sequences or scenes</li>
+                            </ul>
+                            <p>You can also manually adjust the frame count using the "Frames" input field.</p>
+                        </div>
+                        
+                        <div class="step">
+                            <h3 class="text-xl font-semibold mb-2">Step 2: Fill in Project Metadata</h3>
+                            <p class="mb-4">Enter your project information in the fields at the top of the X-sheet:</p>
+                            <ul class="list-disc ml-6 mb-4">
+                                <li><strong>Project #</strong> - Your project's identification number</li>
+                                <li><strong>DATE</strong> - The current date (auto-filled by default)</li>
+                                <li><strong>PAGE #</strong> - The page number of this X-sheet</li>
+                                <li><strong>ANIMATOR</strong> - Your name or the animator's name</li>
+                                <li><strong>VERSION</strong> - The version number of this animation pass</li>
+                                <li><strong>Shot #</strong> - The shot number in your production</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step">
+                            <h3 class="text-xl font-semibold mb-2">Step 3: Import Audio (Optional)</h3>
+                            <p class="mb-4">If your animation requires audio synchronization:</p>
+                            <ol class="list-decimal ml-6 mb-4">
+                                <li>Click the "Import Audio" button</li>
+                                <li>Select an audio file from your computer</li>
+                                <li>The audio waveform will appear in the "Audio Waveform" column</li>
+                                <li>Use the audio controls to play, pause, and scrub through the audio</li>
+                            </ol>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                                <p class="text-sm text-yellow-800">The tool will automatically calculate how many frames the audio requires at 24fps and may suggest increasing your frame count if necessary.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <h3 class="text-xl font-semibold mb-2">Step 4: Fill in Your X-Sheet</h3>
+                            <p class="mb-4">Start adding information to the X-sheet by clicking on cells and typing. The columns include:</p>
+                            <ul class="list-disc ml-6 mb-4">
+                                <li><strong>Action/Description</strong> - Character actions and poses</li>
+                                <li><strong>Fr</strong> - Frame number (auto-filled)</li>
+                                <li><strong>Audio Waveform</strong> - Visual representation of imported audio</li>
+                                <li><strong>Dialogue</strong> - Character dialogue at specific frames</li>
+                                <li><strong>Sound FX</strong> - Sound effects to be synchronized</li>
+                                <li><strong>Tech. Notes</strong> - Technical notes for animation</li>
+                                <li><strong>Extra 1 & 2</strong> - Additional information columns</li>
+                                <li><strong>Camera Moves</strong> - Camera movement instructions</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step">
+                            <h3 class="text-xl font-semibold mb-2">Step 5: Save Your Work</h3>
+                            <p class="mb-4">To save your progress:</p>
+                            <ol class="list-decimal ml-6 mb-4">
+                                <li>Click the "Save Project" button</li>
+                                <li>Your X-sheet will be saved in your browser's local storage and downloaded as a JSON file</li>
+                                <li>To later continue your work, click "Load Project" and select the saved JSON file</li>
+                            </ol>
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                <p class="text-sm">The tool includes an auto-save feature that saves your work every 2 minutes in case of browser crashes or accidental closures.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="ui-overview" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">UI Overview</h2>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Main Interface Components</h3>
+                        <img src="https://i.imgur.com/placeholder/800/500" alt="X-Sheet UI Overview" class="screenshot mb-6 w-full">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold mb-2">Top Control Bar</h4>
+                                <ul class="list-disc ml-6 mb-4">
+                                    <li><strong>Template Selector</strong> - Choose between 11"x17" or 8"x10" layouts</li>
+                                    <li><strong>Frames Input</strong> - Set the total number of frames</li>
+                                    <li><strong>Import Audio</strong> - Load audio files for synchronization</li>
+                                    <li><strong>Save/Load</strong> - Project management buttons</li>
+                                    <li><strong>Export PDF/Print</strong> - Output options</li>
+                                    <li><strong>Add 8 Rows</strong> - Extend your X-sheet</li>
+                                    <li><strong>Clear All</strong> - Reset the X-sheet</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-2">Audio Controls</h4>
+                                <ul class="list-disc ml-6 mb-4">
+                                    <li><strong>Play/Pause</strong> - Control audio playback</li>
+                                    <li><strong>Stop</strong> - Stop audio and reset to beginning</li>
+                                    <li><strong>Scrubber</strong> - Navigate through the audio timeline</li>
+                                    <li><strong>Add Phonetic Marker</strong> - Add lip-sync notation</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-semibold mt-4 mb-2">X-Sheet Table</h4>
+                        <p class="mb-4">The main table consists of columns for different aspects of your animation:</p>
+                        <ul class="list-disc ml-6">
+                            <li><strong>Action/Description</strong> - Document character actions, movements, and key poses</li>
+                            <li><strong>Frame Numbers (Fr)</strong> - Automatically numbered frames (non-editable)</li>
+                            <li><strong>Audio Waveform</strong> - Visual representation of your audio track</li>
+                            <li><strong>Dialogue</strong> - Character speech and script lines</li>
+                            <li><strong>Sound FX</strong> - Sound effects timing and descriptions</li>
+                            <li><strong>Tech. Notes</strong> - Technical information about the animation</li>
+                            <li><strong>Extra 1 & 2</strong> - Additional columns for custom information</li>
+                            <li><strong>Camera Moves</strong> - Camera movement instructions</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tips-card bg-white rounded-lg shadow-sm p-6 border-l-4">
+                        <h3 class="text-xl font-semibold mb-4">Understanding the Table Layout</h3>
+                        <p class="mb-4">The X-sheet table uses special formatting to help with timing:</p>
+                        <ul class="list-disc ml-6">
+                            <li><strong>Every 8th frame</strong> has a bold border to help mark standard animation timing (3 frames per second at 24fps)</li>
+                            <li><strong>Every 24th frame</strong> has a double border marking whole seconds at 24fps</li>
+                            <li><strong>Frame 1</strong> is marked with a green background as the starting frame</li>
+                            <li>Editable cells show a light blue background when focused for editing</li>
+                            <li>Modified cells are highlighted with a light yellow background</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="audio-integration" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Audio Integration</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Importing Audio</h3>
+                        <p class="mb-4">One of the most powerful features of the Interactive X-Sheet is its ability to integrate audio directly into your animation planning:</p>
+                        
+                        <ol class="list-decimal ml-6 mb-6">
+                            <li class="mb-2">Click the <strong>"Import Audio"</strong> button in the control bar</li>
+                            <li class="mb-2">Select an audio file from your computer (most common formats are supported)</li>
+                            <li class="mb-2">Once loaded, the audio waveform will appear in the "Audio Waveform" column</li>
+                            <li class="mb-2">The audio information (file name, duration, and frame count) will be displayed above the waveform</li>
+                        </ol>
+                        
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                            <h4 class="font-semibold text-yellow-800 mb-1">Note:</h4>
+                            <p class="text-sm">If your audio duration requires more frames than your current X-sheet has, you'll be prompted to increase the frame count to accommodate the full audio.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Working with the Audio Waveform</h3>
+                        <p class="mb-4">The waveform visualization helps you identify key audio points for timing your animation:</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <h4 class="font-semibold mb-2">Audio Navigation</h4>
+                                <ul class="list-disc ml-6">
+                                    <li><strong>Click</strong> anywhere on the waveform to jump to that point in the audio</li>
+                                    <li><strong>Drag</strong> up or down on the waveform to scrub through the audio frame by frame</li>
+                                    <li>A red horizontal marker shows the current playback position</li>
+                                    <li>The current frame number is displayed on the marker</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold mb-2">Audio Controls</h4>
+                                <ul class="list-disc ml-6">
+                                    <li><strong>Play/Pause</strong> - Start or pause audio playback</li>
+                                    <li><strong>Stop</strong> - Stop playback and return to the beginning</li>
+                                    <li><strong>Scrubber</strong> - The horizontal bar allows manual navigation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Adding Phonetic Markers</h3>
+                        <p class="mb-4">Phonetic markers are essential for lip-syncing and precise audio timing:</p>
+                        
+                        <ol class="list-decimal ml-6 mb-6">
+                            <li class="mb-2">Click the <strong>"Add Phonetic Marker"</strong> button (this uses your current audio position)</li>
+                            <li class="mb-2">Alternatively, <strong>right-click</strong> on the waveform at the desired time point</li>
+                            <li class="mb-2">Enter the phonetic sound in the popup dialog (e.g., "Ah", "Oh", "M", "P")</li>
+                            <li class="mb-2">Click <strong>"Save"</strong> to add the marker</li>
+                        </ol>
+                        
+                        <p class="mb-4">Once added, phonetic markers appear as small labels on the waveform. To edit or delete a marker:</p>
+                        <ul class="list-disc ml-6">
+                            <li><strong>Double-click</strong> on a marker to edit its text</li>
+                            <li>To delete a marker, double-click it and clear the text field before clicking "Save"</li>
+                        </ul>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                            <h4 class="font-semibold text-blue-800 mb-1">Pro Tip:</h4>
+                            <p class="text-sm">For effective lip-sync, focus on marking key mouth positions rather than every phonetic sound. The most important positions are often "M/B/P" (closed lips), "F/V" (teeth on lower lip), "O" (rounded lips), "E" (wide mouth), and "L" (tongue up).</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="cell-operations" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Cell Operations</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Basic Cell Editing</h3>
+                        <p class="mb-4">All editable cells in the X-sheet table work like text fields:</p>
+                        
+                        <ul class="list-disc ml-6 mb-6">
+                            <li><strong>Click</strong> on any cell to select it and start typing</li>
+                            <li>Press <span class="key-command">Tab</span> to move to the next cell, or <span class="key-command">Shift</span> + <span class="key-command">Tab</span> to move to the previous cell</li>
+                            <li>Press <span class="key-command">Enter</span> to move down to the same column in the next row</li>
+                            <li>Modified cells are highlighted with a light yellow background</li>
+                        </ul>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold mb-2">Editable vs. Non-Editable Cells</h4>
+                            <p>The following cells are <strong>non-editable</strong>:</p>
+                            <ul class="list-disc ml-6">
+                                <li>Frame number cells (automatically generated)</li>
+                                <li>Audio waveform cells (controlled by audio import)</li>
+                            </ul>
+                            <p>All other cells are editable and can contain text describing your animation elements.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Multi-Cell Selection and Operations</h3>
+                        <p class="mb-4">The X-sheet supports selecting and operating on multiple cells at once for efficient editing:</p>
+                        
+                        <h4 class="font-semibold mb-2">Selecting Multiple Cells</h4>
+                        <ul class="list-disc ml-6 mb-6">
+                            <li><strong>Click and drag</strong> across cells to select a range</li>
+                            <li>Hold <span class="key-command">Ctrl</span> or <span class="key-command">Cmd</span> and click individual cells to add them to the selection</li>
+                            <li>Click outside any cell to clear the selection</li>
+                            <li><span class="key-command">Ctrl</span> + <span class="key-command">A</span> while a cell is selected will select all cells in that row</li>
+                        </ul>
+                        
+                        <h4 class="font-semibold mb-2">Operations on Selected Cells</h4>
+                        <ul class="list-disc ml-6 mb-6">
+                            <li><span class="key-command">Ctrl</span> + <span class="key-command">C</span> (or <span class="key-command">Cmd</span> + <span class="key-command">C</span>) to copy the content of selected cells</li>
+                            <li>Press <span class="key-command">Delete</span> or <span class="key-command">Backspace</span> to clear the content of all selected cells</li>
+                            <li>Paste operation will place copied content into the focused cell or the first selected cell</li>
+                        </ul>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                            <h4 class="font-semibold text-blue-800 mb-1">Pro Tip:</h4>
+                            <p class="text-sm">Multi-cell selection is especially useful for repeated actions across multiple frames. Select all relevant cells, copy from a reference cell, and paste to apply the same content to multiple frames at once.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="keyboard-shortcuts" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Keyboard Shortcuts</h2>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <p class="mb-4">The X-sheet tool supports several keyboard shortcuts to speed up your workflow:</p>
+                        
+                        <h3 class="text-lg font-semibold mb-3">Navigation Shortcuts</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Tab</span>
+                                <span>Move to next cell</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Shift</span> + <span class="key-command ml-2 mr-2">Tab</span>
+                                <span>Move to previous cell</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Enter</span>
+                                <span>Move to same column in next row</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Shift</span> + <span class="key-command ml-2 mr-2">Enter</span>
+                                <span>Add a line break within a cell</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold mb-3">Selection Shortcuts</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Ctrl</span> + <span class="key-command ml-2 mr-2">Click</span>
+                                <span>Add cell to selection</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Click and drag</span>
+                                <span>Select range of cells</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Ctrl</span> + <span class="key-command ml-2 mr-2">A</span>
+                                <span>Select all cells in current row</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Click</span> outside cells
+                                <span>Clear selection</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold mb-3">Editing Shortcuts</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Ctrl</span> + <span class="key-command ml-2 mr-2">C</span>
+                                <span>Copy selected cells</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Ctrl</span> + <span class="key-command ml-2 mr-2">V</span>
+                                <span>Paste into current cell</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Delete</span> or <span class="key-command ml-2 mr-2">Backspace</span>
+                                <span>Clear selected cells</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold mb-3">Audio Shortcuts</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Space</span>
+                                <span>Play/Pause audio (when audio controls are focused)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="key-command mr-2">Mouse drag</span> on waveform
+                                <span>Scrub through audio frame by frame</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="export-options" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Export Options</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Saving Your Project</h3>
+                        <p class="mb-4">To save your work for future editing, use the Save Project feature:</p>
+                        
+                        <ol class="list-decimal ml-6 mb-6">
+                            <li class="mb-2">Click the <strong>"Save Project"</strong> button in the control bar</li>
+                            <li class="mb-2">Your project will be saved in two ways:
+                                <ul class="list-disc ml-6 mt-2">
+                                    <li>In your browser's local storage (for automatic recovery)</li>
+                                    <li>Downloaded as a JSON file to your computer</li>
+                                </ul>
+                            </li>
+                            <li class="mb-2">To load a saved project later, click <strong>"Load Project"</strong> and select the JSON file</li>
+                        </ol>
+                        
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                            <h4 class="font-semibold text-yellow-800 mb-1">Auto-Save Feature:</h4>
+                            <p class="text-sm">The X-sheet automatically saves your work every 2 minutes in your browser's local storage. If you accidentally close the browser or it crashes, you'll be prompted to restore your auto-saved work when you return.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Exporting to PDF</h3>
+                        <p class="mb-4">For sharing or archiving your X-sheet, you can export it as a PDF document:</p>
+                        
+                        <ol class="list-decimal ml-6 mb-6">
+                            <li class="mb-2">Click the <strong>"Export PDF"</strong> button in the control bar</li>
+                            <li class="mb-2">Wait a moment while the X-sheet is rendered for PDF output</li>
+                            <li class="mb-2">The PDF will be generated and downloaded automatically</li>
+                            <li class="mb-2">The PDF will include all your X-sheet data, including the audio waveform visualization</li>
+                        </ol>
+                        
+                        <p class="mb-4">The PDF export preserves the format of your X-sheet based on the selected template:</p>
+                        <ul class="list-disc ml-6">
+                            <li>11"x17" template exports as a tabloid-sized PDF</li>
+                            <li>8"x10" template exports as a letter-sized PDF</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4">Printing Your X-Sheet</h3>
+                        <p class="mb-4">To print a physical copy of your X-sheet for traditional animation workflows:</p>
+                        
+                        <ol class="list-decimal ml-6 mb-6">
+                            <li class="mb-2">Click the <strong>"Print"</strong> button in the control bar</li>
+                            <li class="mb-2">Your browser's print dialog will open</li>
+                            <li class="mb-2">Select your print options (paper size, orientation, etc.)</li>
+                            <li class="mb-2">Click "Print" in the dialog to send to your printer</li>
+                        </ol>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                            <h4 class="font-semibold text-blue-800 mb-1">Printing Tips:</h4>
+                            <p class="text-sm">For best results, make sure your printer settings match your template size (11"x17" or 8"x10"). When printing, the tool automatically hides control elements and formats the waveform for optimal printing.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tutorials" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Tutorials</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Basic X-Sheet Usage</h3>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                            <h4 class="font-semibold mb-2">Creating a Simple Animation Plan</h4>
+                            <p class="mb-4">Follow these steps to create a basic animation plan using the X-sheet:</p>
+                            
+                            <ol class="list-decimal ml-6">
+                                <li class="mb-3">
+                                    <strong>Set up your document</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Choose the 8"x10" template for a shorter animation (48 frames). Fill in the project metadata with a title, your name, and today's date.</p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Plan your key poses</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Action/Description column, mark your key poses at specific frames. For example:
+                                        <br>• Frame 1: Character standing, neutral pose
+                                        <br>• Frame 12: Character beginning to crouch
+                                        <br>• Frame 24: Character at lowest point of crouch
+                                        <br>• Frame 36: Character jumping up
+                                        <br>• Frame 48: Character landing
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Add technical timing notes</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Technical Notes column, add information about timing and spacing:
+                                        <br>• Frames 1-12: Slow in (gradually accelerating)
+                                        <br>• Frames 24-36: Fast out (quick acceleration)
+                                        <br>• Frames 36-48: Slow in (deceleration for landing)
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Add sound effects</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Sound FX column, note any sounds that should occur:
+                                        <br>• Frame 24: "Whoosh" sound for jump preparation
+                                        <br>• Frame 48: "Thud" sound for landing
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Camera movements</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Camera Moves column, describe any camera movement:
+                                        <br>• Frames 1-24: Camera static
+                                        <br>• Frames 24-48: Camera tilts up slightly to follow jump
+                                    </p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Working with Audio and Lip-Sync</h3>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                            <h4 class="font-semibold mb-2">Basic Dialogue Animation Planning</h4>
+                            <p class="mb-4">Follow this tutorial to plan animation for a character saying "Hello, how are you today?"</p>
+                            
+                            <ol class="list-decimal ml-6">
+                                <li class="mb-3">
+                                    <strong>Import your dialogue audio</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Click "Import Audio" and select your dialogue recording. The waveform will appear in the Audio Waveform column.</p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Identify key phonetic positions</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Play through the audio and add phonetic markers at important mouth positions:
+                                        <br>• "H" - Slightly open mouth position
+                                        <br>• "E" - Wide mouth position
+                                        <br>• "L" - Tongue up position
+                                        <br>• "O" - Rounded mouth position
+                                        <br>• And so on for the rest of the dialogue
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Plan facial expressions</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Action/Description column, note changes in facial expression:
+                                        <br>• Beginning: Neutral expression
+                                        <br>• "Hello": Eyebrows raise slightly
+                                        <br>• "how are you": Head tilts questioningly
+                                        <br>• "today": Slight smile forms
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Add dialogue text</strong>
+                                    <p class="text-sm text-gray-700 mt-1">In the Dialogue column, write out the words as they occur across frames, breaking them up by syllables if needed.</p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Add body movements</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Consider how the body moves during speech:
+                                        <br>• Gesture on "Hello" - Hand raises
+                                        <br>• Slight forward lean on "how are you"
+                                        <br>• Return to neutral on "today"
+                                    </p>
+                                </li>
+                            </ol>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                                <h5 class="font-semibold text-blue-800 mb-1">Pro Animation Tip:</h5>
+                                <p class="text-sm">For believable dialogue animation, remember that facial expressions often anticipate speech by a few frames. Plan your expression changes to begin 2-3 frames before the corresponding words.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4">Advanced X-Sheet Techniques</h3>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h4 class="font-semibold mb-2">Planning Complex Character Interaction</h4>
+                            <p class="mb-4">This tutorial demonstrates how to use the X-sheet for a scene with two characters interacting:</p>
+                            
+                            <ol class="list-decimal ml-6">
+                                <li class="mb-3">
+                                    <strong>Use Extra columns for character separation</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Dedicate different columns to different characters:
+                                        <br>• Action/Description: Character A's actions
+                                        <br>• Extra 1: Character B's actions
+                                        <br>• Dialogue: Both characters' dialogue (clearly labeled)
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Color-code your entries</strong>
+                                    <p class="text-sm text-gray-700 mt-1">When printing, consider using different colored pens to mark entries for different characters, making it easier to visually separate information.</p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Plan action-reaction timing</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Use the frame numbers to ensure proper timing between actions and reactions:
+                                        <br>• Frame 12: Character A throws ball
+                                        <br>• Frame 18: Ball reaches peak height
+                                        <br>• Frame 24: Character B catches ball
+                                        <br>• Frame 28: Character B reacts with facial expression
+                                    </p>
+                                </li>
+                                
+                                <li class="mb-3">
+                                    <strong>Coordinate overlapping actions</strong>
+                                    <p class="text-sm text-gray-700 mt-1">Plan how multiple elements move simultaneously:
+                                        <br>• While Character A is throwing, their body follows through
+                                        <br>• While the ball is in the air, Character B prepares to catch
+                                        <br>• Camera might pan to follow the ball's arc
+                                    </p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="faq" class="mb-16">
+                    <h2 class="section-title text-3xl font-bold mb-6">Frequently Asked Questions</h2>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>What is an X-sheet and why do I need one?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>An X-sheet (exposure sheet) is a planning document used in animation to coordinate timing of movements, dialogue, sound effects, and camera work. It serves as a detailed frame-by-frame roadmap for your animation.</p>
+                                    <p class="mt-2">You need an X-sheet to:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>Synchronize animation with audio precisely</li>
+                                        <li>Plan timing for smooth, believable movement</li>
+                                        <li>Coordinate multiple animation elements</li>
+                                        <li>Create consistent documentation for animation teams</li>
+                                        <li>Track complex sequences with multiple characters or elements</li>
+                                    </ul>
+                                    <p class="mt-2">Even in digital animation, X-sheets remain an industry standard tool for planning and documentation.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Is my data secure when using this tool?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>Yes, your data is secure. The Interactive Animation X-Sheet tool operates entirely within your browser:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>All data is stored locally in your browser's storage (localStorage)</li>
+                                        <li>Audio files are processed directly in your browser and are not uploaded to any server</li>
+                                        <li>Saved project files (JSON) are downloaded directly to your computer</li>
+                                        <li>PDF exports are generated client-side without sending data to external servers</li>
+                                    </ul>
+                                    <p class="mt-2">For added security, regularly download your projects as JSON files for backup, as browser storage can be cleared when clearing browsing history or cookies.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>What audio formats are supported?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>The X-sheet tool supports all standard audio formats that your browser can play, including:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>MP3 (.mp3)</li>
+                                        <li>WAV (.wav)</li>
+                                        <li>OGG (.ogg)</li>
+                                        <li>AAC (.aac, .m4a)</li>
+                                    </ul>
+                                    <p class="mt-2">The tool uses the Web Audio API for processing, which has excellent browser compatibility. For best results, use MP3 or WAV formats, which have the widest support across all browsers.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Can I use this tool for different animation frame rates?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>The Interactive X-Sheet is designed with a standard 24fps animation rate in mind, which is the film industry standard. However, you can adapt it for different frame rates:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li><strong>For 30fps</strong>: The bold lines at every 8 frames would represent approximately 3.75 frames per second instead of 3 frames per second</li>
+                                        <li><strong>For 12fps</strong>: Consider each marked frame as representing 2 frames in your final animation</li>
+                                    </ul>
+                                    <p class="mt-2">When working with audio, the tool will still analyze timing based on 24fps, so you'll need to mentally adjust the timing if working at a different frame rate. For precise timings at other frame rates, note the time in seconds and convert to your target frame rate.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Why does my audio waveform look different after export?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>When exporting to PDF or printing, the audio waveform is rendered differently than in the interactive view:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>In the interactive view, the waveform spans the entire height of your X-sheet for detailed visualization</li>
+                                        <li>In exports and prints, each cell shows only the portion of the waveform that corresponds to that specific frame</li>
+                                    </ul>
+                                    <p class="mt-2">This difference is by design to maintain proper layout in printed documents while still providing visual reference for audio timing. Phonetic markers are still included in the exported cells that contain them.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Can I collaborate with others using this tool?</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-content-inner">
+                                    <p>While the tool doesn't have built-in real-time collaboration, you can collaborate using these workflows:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li><strong>File sharing</strong>: Save your project as a JSON file and share it with teammates, who can load it into their copy of the tool</li>
+                                        <li><strong>PDF sharing</strong>: Export the X-sheet as a PDF for review and annotation by team members</li>
+                                        <li><strong>Print and manual markup</strong>: Print physical copies for traditional animation pipeline collaboration</li>
+                                    </ul>
+                                    <p class="mt-2">For animation studios, establishing a file naming convention (e.g., ProjectName_ShotNumber_Version_Animator.json) can help maintain organization when sharing X-sheet files among team members.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h18M3 16h18" />
+                        </svg>
+                        <span class="font-bold text-xl">Animation X-Sheet</span>
+                    </div>
+                    <p class="mt-2 text-gray-300">A powerful tool for animation planning and timing</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Documentation</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="text-gray-300 hover:text-blue-300">Introduction</a></li>
+                            <li><a href="#features" class="text-gray-300 hover:text-blue-300">Features</a></li>
+                            <li><a href="#getting-started" class="text-gray-300 hover:text-blue-300">Getting Started</a></li>
+                            <li><a href="#tutorials" class="text-gray-300 hover:text-blue-300">Tutorials</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Resources</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">Animation Principles</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">Lip Sync Guide</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">Timing References</a></li>
+                            <li><a href="#faq" class="text-gray-300 hover:text-blue-300">FAQ</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Connect</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">Contact</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">Feedback</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-blue-300">GitHub</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-8 border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">© 2025 Animation X-Sheet. All rights reserved.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <div class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- JavaScript for interactive elements -->
+    <script>
+        // Accordion functionality
+        function toggleAccordion(element) {
+            const content = element.nextElementSibling;
+            
+            if (content.style.maxHeight) {
+                // Close this accordion
+                content.style.maxHeight = null;
+                element.querySelector('i').classList.remove('fa-chevron-up');
+                element.querySelector('i').classList.add('fa-chevron-down');
+            } else {
+                // Open this accordion
+                content.style.maxHeight = content.scrollHeight + "px";
+                element.querySelector('i').classList.remove('fa-chevron-down');
+                element.querySelector('i').classList.add('fa-chevron-up');
+            }
+        }
+        
+        // Initialize accordions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up tabbed content
+            const tabs = document.querySelectorAll('.tab');
+            if (tabs.length > 0) {
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Remove active class from all tabs and content
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        // Add active class to clicked tab and corresponding content
+                        tab.classList.add('active');
+                        const contentId = tab.getAttribute('data-tab');
+                        document.getElementById(contentId).classList.add('active');
+                    });
+                });
+                
+                // Activate first tab by default
+                tabs[0].click();
+            }
+            
+            // Scroll to top button
+            const scrollButton = document.getElementById('scrollToTop');
+            
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    scrollButton.classList.add('visible');
+                } else {
+                    scrollButton.classList.remove('visible');
+                }
+            });
+            
+            // Handle anchor links smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Initialize open/close for mobile menu
+            const mobileMenuButton = document.querySelector('nav button');
+            const mobileMenu = document.querySelector('nav ul');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    mobileMenu.classList.toggle('flex');
+                    mobileMenu.classList.toggle('flex-col');
+                    mobileMenu.classList.toggle('absolute');
+                    mobileMenu.classList.toggle('top-14');
+                    mobileMenu.classList.toggle('right-4');
+                    mobileMenu.classList.toggle('bg-white');
+                    mobileMenu.classList.toggle('shadow-md');
+                    mobileMenu.classList.toggle('p-4');
+                    mobileMenu.classList.toggle('rounded-lg');
+                    mobileMenu.classList.toggle('z-50');
+                });
+            }
+            
+            // Highlight active section in sidebar based on scroll position
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.sidebar a');
+            
+            function highlightNavigation() {
+                const scrollPosition = window.scrollY;
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionHeight = section.offsetHeight;
+                    const sectionId = section.getAttribute('id');
+                    
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('text-blue-600');
+                            link.classList.add('text-gray-600');
+                            
+                            if (link.getAttribute('href') === '#' + sectionId) {
+                                link.classList.remove('text-gray-600');
+                                link.classList.add('text-blue-600');
+                            }
+                        });
+                    }
+                });
+            }
+            
+            window.addEventListener('scroll', highlightNavigation);
+            
+            // Initialize first accordion to be open
+            const firstAccordion = document.querySelector('.accordion-header');
+            if (firstAccordion) {
+                toggleAccordion(firstAccordion);
+            }
+        });
+        
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

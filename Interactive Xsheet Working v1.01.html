@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Animation X-Sheet with Audio Waveform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.2;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .controls {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls select, .controls input, .controls button {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .controls button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .controls button:hover {
+            background-color: #45a049;
+        }
+
+        #pdf-button {
+            background-color: #f44336;
+        }
+
+        #pdf-button:hover {
+            background-color: #d32f2f;
+        }
+
+        #print-button {
+            background-color: #2196F3;
+        }
+
+        #print-button:hover {
+            background-color: #0b7dda;
+        }
+
+        #audio-button {
+            background-color: #9c27b0;
+        }
+
+        #audio-button:hover {
+            background-color: #7b1fa2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .metadata div {
+            border: 1px solid #000;
+            padding: 3px 5px;
+        }
+
+        .metadata span {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .metadata input {
+            border: none;
+            width: 70%;
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: top;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #eee;
+            font-weight: bold;
+            text-align: center;
+            font-size: 9pt;
+        }
+
+        .action-col { width: 16%; }
+        .frame-col { width: 4%; text-align: center; }
+        .waveform-col { width: 10%; padding: 0; position: relative; }
+        .dialogue-col { width: 10%; text-align: center; }
+        .sound-col { width: 9%; text-align: center; }
+        .technical-col { width: 9%; }
+        .extra1-col { width: 8%; }
+        .extra2-col { width: 8%; }
+        .camera-col { width: 12%; }
+
+        .waveform-container {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .waveform-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 11;
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        .waveform-marker {
+            position: absolute;
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 0, 0.2);
+            pointer-events: none;
+            text-align: center;
+            font-size: 7pt;
+            line-height: 18px;
+            color: #666;
+            z-index: 20;
+        }
+
+        .waveform-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        
+        .waveform-col-container {
+            position: relative;
+        }
+
+        .phonetic-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 7pt;
+            padding: 1px 2px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .footer {
+            font-size: 8pt;
+            text-align: center;
+            margin-top: 5px;
+            color: #333;
+            font-style: italic;
+        }
+
+        [contenteditable="true"] {
+            min-height: 18px;
+            cursor: text;
+        }
+
+        [contenteditable="true"]:focus {
+            background-color: #f0f7ff;
+            outline: none;
+        }
+
+        [contenteditable="true"]:empty:before {
+            content: attr(data-placeholder);
+            color: #888;
+            font-style: italic;
+        }
+
+        .frame-number {
+            background-color: #eee;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .modified {
+            background-color: #fffacd;
+        }
+        
+        .selected-cell {
+            background-color: rgba(0, 123, 255, 0.2) !important;
+            outline: 2px solid #0d6efd;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            font-style: italic;
+            color: #555;
+        }
+
+        #audio-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        #audio-controls button {
+            padding: 4px 8px;
+            background-color: #673ab7;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #audio-controls button:hover {
+            background-color: #5e35b1;
+        }
+
+        #audio-info {
+            font-size: 8pt;
+            color: #333;
+        }
+
+        #phonetic-input {
+            position: absolute;
+            z-index: 100;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        #audio-upload {
+            display: none;
+        }
+
+        /* Print specific styles */
+        @media print {
+            .controls, button, #frame-count-container, .status, #audio-controls, #phonetic-input {
+                display: none !important;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            @page {
+                size: auto;
+                margin: 0.5cm;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+            
+            /* Better waveform printing */
+            .waveform-col {
+                position: relative !important;
+                overflow: hidden !important;
+            }
+            
+            .print-waveform-container {
+                display: block !important;
+                position: absolute !important;
+                z-index: 1000 !important;
+                pointer-events: none !important;
+                overflow: hidden !important;
+            }
+            
+            .waveform-col * {
+                page-break-inside: avoid !important;
+            }
+            
+            /* ensure the waveform clone prints correctly */
+            .print-waveform-clone {
+                display: block !important;
+                position: absolute !important;
+                z-index: 1000 !important;
+                pointer-events: none !important;
+            }
+            
+            .cell-waveform-window {
+                position: relative !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            /* Hide original waveform during print */
+            body > .waveform-container {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div>
+            <label for="template-selector">Template:</label>
+            <select id="template-selector">
+                <option value="large">11"x17" (96 Frames)</option>
+                <option value="small">8"x10" (48 Frames)</option>
+            </select>
+        </div>
+        
+        <div id="frame-count-container">
+            <label for="frame-count">Frames:</label>
+            <input type="number" id="frame-count" min="24" step="8" value="96">
+        </div>
+        
+        <button id="audio-button">Import Audio</button>
+        <input type="file" id="audio-upload" accept="audio/*">
+        
+        <button id="save-button">Save Project</button>
+        <button id="load-button">Load Project</button>
+        <button id="pdf-button">Export PDF</button>
+        <button id="print-button">Print</button>
+        <button id="add-rows-button">Add 8 Rows</button>
+        <button id="clear-button">Clear All</button>
+    </div>
+    
+    <div id="audio-controls">
+        <button id="play-audio">Play/Pause</button>
+        <button id="stop-audio">Stop</button>
+        <input type="range" id="audio-scrubber" min="0" max="100" value="0" style="width: 200px;">
+        <span id="audio-info">No audio loaded</span>
+        <button id="add-phonetic">Add Phonetic Marker</button>
+        <div style="margin-left: 10px; color: #666; font-style: italic;">
+            ✨ TIP: Drag down the waveform column while holding the left mouse button to scrub audio frame-by-frame<br>
+            💡 TIP: Click and drag to select multiple cells (use Ctrl+C to copy, Delete to clear)
+        </div>
+    </div>
+    
+    <div id="phonetic-input">
+        <input type="text" id="phonetic-text" placeholder="Enter phonetic sound">
+        <button id="save-phonetic">Save</button>
+        <button id="cancel-phonetic">Cancel</button>
+    </div>
+    
+    <div id="printable-area">
+        <div class="header">
+            <div class="title">3D ANIMATION X-SHEET</div>
+        </div>
+        
+        <div class="metadata">
+            <div><span>Project #:</span><input type="text" id="project-number"></div>
+            <div><span>DATE:</span><input type="date" id="project-date"></div>
+            <div><span>PAGE #:</span><input type="text" id="page-number"></div>
+            <div><span>ANIMATOR:</span><input type="text" id="animator-name"></div>
+            <div><span>VERSION:</span><input type="text" id="version-number"></div>
+            <div><span>Shot #:</span><input type="text" id="shot-number"></div>
+        </div>
+        
+        <table id="xsheet-table">
+            <thead>
+                <tr>
+                    <th class="action-col">Action/Description</th>
+                    <th class="frame-col">Fr</th>
+                    <th class="waveform-col">Audio Waveform</th>
+                    <th class="dialogue-col">Dialogue</th>
+                    <th class="sound-col">Sound FX</th>
+                    <th class="technical-col">Tech. Notes</th>
+                    <th class="extra1-col">Extra 1</th>
+                    <th class="extra2-col">Extra 2</th>
+                    <th class="frame-col">Fr</th>
+                    <th class="camera-col">Camera Moves</th>
+                </tr>
+            </thead>
+            <tbody id="xsheet-body">
+                <!-- Rows will be generated via JavaScript -->
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            Bold lines mark 8-frame intervals. Double lines mark 24-frame intervals (24fps). 
+            Left columns track character actions, middle columns for technical notes, right for camera moves.
+        </div>
+    </div>
+    
+    <div class="status" id="status-message"></div>
+
+    <script>
+        // Wait for page load and libraries to initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global variables
+            let frameCount = 96;
+            let projectName = 'Animation_XSheet_' + new Date().toISOString().split('T')[0];
+            let modified = false;
+            let currentTemplate = 'large';
+            
+            // Audio variables
+            let audioContext = null;
+            let audioBuffer = null;
+            let audioSource = null;
+            let audioData = null;
+            let isPlaying = false;
+            let startTime = 0;
+            let startOffset = 0;
+            let audioFileName = '';
+            let waveformData = [];
+            let waveformCanvases = [];
+            let phonetics = [];
+            let frameDuration = 1/24; // 24fps
+            let currentFrame = 0;
+            let phoneticEditPosition = null;
+            
+            // Initialize UI elements
+            const templateSelector = document.getElementById('template-selector');
+            const frameCountInput = document.getElementById('frame-count');
+            const saveButton = document.getElementById('save-button');
+            const loadButton = document.getElementById('load-button');
+            const pdfButton = document.getElementById('pdf-button');
+            const printButton = document.getElementById('print-button');
+            const addRowsButton = document.getElementById('add-rows-button');
+            const clearButton = document.getElementById('clear-button');
+            const tableBody = document.getElementById('xsheet-body');
+            const statusMessage = document.getElementById('status-message');
+            const audioButton = document.getElementById('audio-button');
+            const audioUpload = document.getElementById('audio-upload');
+            const playAudioButton = document.getElementById('play-audio');
+            const stopAudioButton = document.getElementById('stop-audio');
+            const audioScrubber = document.getElementById('audio-scrubber');
+            const audioInfo = document.getElementById('audio-info');
+            const addPhoneticButton = document.getElementById('add-phonetic');
+            const phoneticInput = document.getElementById('phonetic-input');
+            const phoneticText = document.getElementById('phonetic-text');
+            const savePhoneticButton = document.getElementById('save-phonetic');
+            const cancelPhoneticButton = document.getElementById('cancel-phonetic');
+            
+            // Date field - set today by default
+            const dateField = document.getElementById('project-date');
+            dateField.valueAsDate = new Date();
+            
+            // Initialize the table
+            generateTable(frameCount);
+            
+            // Event Listeners
+            templateSelector.addEventListener('change', function() {
+                currentTemplate = this.value;
+                updateTemplate();
+            });
+            
+            frameCountInput.addEventListener('change', function() {
+                frameCount = parseInt(this.value);
+                if (frameCount < 8) frameCount = 8;
+                generateTable(frameCount);
+                updateStatusMessage('Frame count updated to ' + frameCount);
+                
+                // Re-render waveform if audio is loaded
+                if (audioBuffer) {
+                    renderWaveform();
+                }
+            });
+            
+            saveButton.addEventListener('click', saveProject);
+            loadButton.addEventListener('click', loadProject);
+            pdfButton.addEventListener('click', exportToPDF);
+            printButton.addEventListener('click', printSheet);
+            addRowsButton.addEventListener('click', addEightRows);
+            clearButton.addEventListener('click', clearSheet);
+            
+            // Audio related event listeners
+            audioButton.addEventListener('click', function() {
+                audioUpload.click();
+            });
+            
+            audioUpload.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    audioFileName = file.name;
+                    loadAudioFile(file);
+                }
+            });
+            
+            playAudioButton.addEventListener('click', togglePlayAudio);
+            stopAudioButton.addEventListener('click', stopAudio);
+            audioScrubber.addEventListener('input', scrubAudio);
+            
+            addPhoneticButton.addEventListener('click', function() {
+                if (audioBuffer) {
+                    showPhoneticInput(null);
+                } else {
+                    updateStatusMessage('Please load audio first');
+                }
+            });
+            
+            savePhoneticButton.addEventListener('click', savePhoneticMarker);
+            cancelPhoneticButton.addEventListener('click', function() {
+                phoneticInput.style.display = 'none';
+            });
+            
+            // Monitor for changes to set modified flag
+            document.addEventListener('input', function(e) {
+                if (!e.target.matches('input, [contenteditable="true"]')) return;
+                modified = true;
+                
+                if (e.target.matches('[contenteditable="true"]')) {
+                    // Add the modified class when content is added
+                    e.target.classList.add('modified');
+                    
+                    // Remove the modified class when the cell is empty
+                    if (e.target.textContent.trim() === '') {
+                        e.target.classList.remove('modified');
+                    }
+                }
+                
+                updateStatusMessage('Changes detected - not saved');
+            });
+            
+            // Variables for cell selection
+            let selectedCells = [];
+            let isSelecting = false;
+            let selectionStart = null;
+            let hasMovedDuringSelection = false;
+            
+            // Set up multi-cell selection functionality
+            function setupCellSelection() {
+                const editableCells = document.querySelectorAll('[contenteditable="true"]');
+                
+                // Clear selected cells when clicking outside
+                // only clear if this wasn't part of a drag
+                document.addEventListener('click', function(e) {
+                    // if we just finished dragging, skip this click
+                    if (hasMovedDuringSelection) {
+                        hasMovedDuringSelection = false;
+                        return;
+                    }
+                    
+                    if (!e.target.matches('[contenteditable="true"]') && 
+                        !e.target.closest('.selected-cell') &&
+                        !e.ctrlKey && !e.metaKey) {
+                        clearCellSelection();
+                    }
+                });
+                
+                // Handle mousedown for selection start
+                editableCells.forEach(cell => {
+                    // Mousedown - start potential selection
+                    cell.addEventListener('mousedown', function(e) {
+                        // Only handle left mouse button
+                        if (e.button !== 0) return;
+                        
+                        // If we're pressing control/meta, toggle this cell in the selection
+                        if (e.ctrlKey || e.metaKey) {
+                            toggleCellSelection(cell);
+                            e.preventDefault(); // Prevent text cursor
+                            return;
+                        }
+                        
+                        // Clear previous selection unless clicking on already selected cell
+                        if (!cell.classList.contains('selected-cell')) {
+                            clearCellSelection();
+                        }
+                        
+                        // Store starting cell and reset movement flag
+                        selectionStart = cell;
+                        hasMovedDuringSelection = false;
+                        isSelecting = true;
+                        
+                        // Initially add this cell to selection
+                        if (!cell.classList.contains('selected-cell')) {
+                            toggleCellSelection(cell, true);
+                        }
+                    });
+                    
+                    // Mousemove - add cells to selection if dragging
+                    document.addEventListener('mousemove', function(e) {
+                        if (!isSelecting) return;
+                        
+                        // Set the flag that we've moved during this selection
+                        hasMovedDuringSelection = true;
+                        
+                        // Find what cell we're over
+                        const target = document.elementFromPoint(e.clientX, e.clientY);
+                        if (target && target.matches('[contenteditable="true"]')) {
+                            toggleCellSelection(target, true);
+                            
+                            // Prevent text selection during cell selection
+                            e.preventDefault();
+                            if (window.getSelection) {
+                                window.getSelection().removeAllRanges();
+                            }
+                        }
+                    });
+                    
+                    // Additional keyboard events for selected cells
+                    cell.addEventListener('keydown', function(e) {
+                        // If Delete or Backspace key and we have selected cells
+                        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCells.length > 1) {
+                            e.preventDefault();
+                            clearSelectedCellsContent();
+                        }
+                        
+                        // Copy with Ctrl+C or Cmd+C
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedCells.length > 0) {
+                            e.preventDefault();
+                            copySelectedCells();
+                        }
+                        
+                        // Paste with Ctrl+V or Cmd+V
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && selectedCells.length > 0) {
+                            // Handle paste will be triggered by the paste event
+                        }
+                        
+                        // Select all cells in row with Ctrl+A or Cmd+A
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                            e.preventDefault();
+                            selectRowCells(cell.parentElement);
+                        }
+                    });
+                    
+                    // Click handler for single cell focus
+                    cell.addEventListener('click', function(e) {
+                        // If this was just a click without dragging and not a ctrl/cmd click
+                        if (!hasMovedDuringSelection && !e.ctrlKey && !e.metaKey) {
+                            // Focus this cell for editing if it's the only selected cell
+                            if (selectedCells.length === 1 && selectedCells[0] === cell) {
+                                // Already selected, so keep it selected and allow editing
+                                // No need to do anything special
+                            } else {
+                                // Select only this cell
+                                clearCellSelection();
+                                toggleCellSelection(cell, true);
+                            }
+                        }
+                    });
+                });
+                
+                // Mouseup - end selection but keep cells selected
+                document.addEventListener('mouseup', function() {
+                    isSelecting = false;
+                    selectionStart = null;
+                });
+                
+                // Listen for paste events
+                document.addEventListener('paste', function(e) {
+                    if (selectedCells.length > 0) {
+                        handlePaste(e);
+                    }
+                });
+            }
+            
+            function toggleCellSelection(cell, addOnly = false) {
+                const index = selectedCells.indexOf(cell);
+                
+                if (index === -1) {
+                    // Add to selection
+                    selectedCells.push(cell);
+                    cell.classList.add('selected-cell');
+                } else if (!addOnly) {
+                    // Remove from selection if not add-only mode
+                    selectedCells.splice(index, 1);
+                    cell.classList.remove('selected-cell');
+                }
+            }
+            
+            function clearCellSelection() {
+                selectedCells.forEach(cell => {
+                    cell.classList.remove('selected-cell');
+                });
+                selectedCells = [];
+            }
+            
+            function clearSelectedCellsContent() {
+                selectedCells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('modified');
+                });
+                modified = true;
+                updateStatusMessage('Cleared selected cells');
+            }
+            
+            function copySelectedCells() {
+                if (selectedCells.length === 0) return;
+                
+                // Create a text representation of selected cells
+                const cellData = selectedCells.map(cell => cell.textContent || '').join('\t');
+                
+                // Copy to clipboard using Clipboard API
+                navigator.clipboard.writeText(cellData)
+                    .then(() => {
+                        updateStatusMessage('Copied selected cells to clipboard');
+                    })
+                    .catch(err => {
+                        updateStatusMessage('Failed to copy: ' + err);
+                    });
+            }
+            
+            function handlePaste(e) {
+                // Prevent default paste behavior
+                e.preventDefault();
+                
+                // Get clipboard data
+                const clipboardData = e.clipboardData || window.clipboardData;
+                const pastedText = clipboardData.getData('text');
+                
+                // If we have a focused element within selection, paste there
+                const activeElement = document.activeElement;
+                if (activeElement && selectedCells.includes(activeElement)) {
+                    activeElement.textContent = pastedText;
+                    activeElement.classList.add('modified');
+                    modified = true;
+                } else if (selectedCells.length > 0) {
+                    // Otherwise paste into first selected cell
+                    selectedCells[0].textContent = pastedText;
+                    selectedCells[0].classList.add('modified');
+                    modified = true;
+                }
+                
+                if (pastedText.trim() === '') {
+                    selectedCells.forEach(cell => {
+                        cell.classList.remove('modified');
+                    });
+                }
+                
+                updateStatusMessage('Pasted content into selected cell');
+            }
+            
+            function selectRowCells(row) {
+                // Clear previous selection
+                clearCellSelection();
+                
+                // Select all editable cells in the row
+                const cells = Array.from(row.cells).filter(cell => cell.contentEditable === 'true');
+                cells.forEach(cell => {
+                    toggleCellSelection(cell, true);
+                });
+            }
+            
+            // Functions
+            function generateTable(frames) {
+                tableBody.innerHTML = '';
+                waveformCanvases = [];
+                
+                // Create a column container for the waveform
+                const waveformColContainer = document.createElement('div');
+                waveformColContainer.className = 'waveform-col-container';
+                
+                for (let i = 1; i <= frames; i++) {
+                    const row = document.createElement('tr');
+                    row.className = `frame-${i}`;
+                    row.setAttribute('data-frame', i);
+                    
+                    // Create standard cell
+                    function createCell(className, isEditable = true, frameNum = null) {
+                        const cell = document.createElement('td');
+                        cell.className = className;
+                        
+                        if (isEditable) {
+                            cell.contentEditable = true;
+                            cell.setAttribute('data-placeholder', '');
+                            cell.setAttribute('tabindex', '0');
+                        } else if (frameNum !== null) {
+                            cell.textContent = frameNum;
+                            cell.className += ' frame-number';
+                            
+                            // Color the first frame green for reference (like in the example image)
+                            if (frameNum === 1) {
+                                cell.style.backgroundColor = '#00cc00';
+                            } else {
+                                cell.style.backgroundColor = '#cccccc';
+                            }
+                        }
+                        
+                        return cell;
+                    }
+                    
+                    // Create waveform cell (placeholder for the vertical waveform)
+                    function createWaveformCell(frameNum) {
+                        const cell = document.createElement('td');
+                        cell.className = 'waveform-col';
+                        cell.setAttribute('data-frame', frameNum);
+                        return cell;
+                    }
+                    
+                    // Add all cells to the row
+                    row.appendChild(createCell('action-col'));
+                    row.appendChild(createCell('frame-col', false, i));
+                    row.appendChild(createWaveformCell(i));
+                    row.appendChild(createCell('dialogue-col'));
+                    row.appendChild(createCell('sound-col'));
+                    row.appendChild(createCell('technical-col'));
+                    row.appendChild(createCell('extra1-col'));
+                    row.appendChild(createCell('extra2-col'));
+                    row.appendChild(createCell('frame-col', false, i));
+                    row.appendChild(createCell('camera-col'));
+                    
+                    // Add special styling for 8-frame and 24-frame intervals
+                    if (i % 24 === 0) {
+                        row.style.borderBottom = '4px double #000';
+                        for (let cell of row.cells) {
+                            cell.style.borderBottom = '4px double #000';
+                            cell.style.fontWeight = 'bold';
+                        }
+                    } else if (i % 8 === 0) {
+                        row.style.borderBottom = '2px solid #000';
+                        for (let cell of row.cells) {
+                            cell.style.borderBottom = '2px solid #000';
+                            cell.style.fontWeight = 'bold';
+                        }
+                    }
+                    
+                    tableBody.appendChild(row);
+                }
+                
+                setupCellNavigation();
+                updateStatusMessage('Table generated with ' + frames + ' frames');
+            }
+            
+            function updateTemplate() {
+                if (currentTemplate === 'large') {
+                    // 11"x17" template (96 frames)
+                    document.body.style.maxWidth = '11in';
+                    document.body.style.maxHeight = '17in';
+                    document.body.style.fontSize = '9pt';
+                    frameCountInput.value = 96;
+                    frameCount = 96;
+                } else {
+                    // 8"x10" template (48 frames)
+                    document.body.style.maxWidth = '8in';
+                    document.body.style.maxHeight = '10in';
+                    document.body.style.fontSize = '8pt';
+                    frameCountInput.value = 48;
+                    frameCount = 48;
+                }
+                
+                generateTable(frameCount);
+                updateStatusMessage('Template switched to ' + (currentTemplate === 'large' ? '11"x17"' : '8"x10"'));
+                
+                // Re-render waveform if audio is loaded
+                if (audioBuffer) {
+                    renderWaveform();
+                }
+            }
+            
+            function setupCellNavigation() {
+                const editableCells = document.querySelectorAll('[contenteditable="true"]');
+                
+                editableCells.forEach(cell => {
+                    cell.addEventListener('keydown', function(e) {
+                        // Tab navigation
+                        if (e.key === 'Tab') {
+                            e.preventDefault();
+                            const currentRow = this.parentElement;
+                            const currentIndex = Array.from(currentRow.cells).indexOf(this);
+                            
+                            if (e.shiftKey) {
+                                // Shift+Tab moves backward
+                                let prevCell = null;
+                                if (currentIndex > 0) {
+                                    // Find previous editable cell in same row
+                                    for (let i = currentIndex - 1; i >= 0; i--) {
+                                        if (currentRow.cells[i].contentEditable === 'true') {
+                                            prevCell = currentRow.cells[i];
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (!prevCell) {
+                                    // Move to previous row, last cell
+                                    const prevRow = currentRow.previousElementSibling;
+                                    if (prevRow) {
+                                        const cells = Array.from(prevRow.cells).filter(c => c.contentEditable === 'true');
+                                        prevCell = cells[cells.length - 1];
+                                    }
+                                }
+                                
+                                if (prevCell) {
+                                    prevCell.focus();
+                                    // Place cursor at end of content
+                                    const range = document.createRange();
+                                    const sel = window.getSelection();
+                                    range.selectNodeContents(prevCell);
+                                    range.collapse(false);
+                                    sel.removeAllRanges();
+                                    sel.addRange(range);
+                                }
+                            } else {
+                                // Tab moves forward
+                                let nextCell = null;
+                                if (currentIndex < currentRow.cells.length - 1) {
+                                    // Find next editable cell in same row
+                                    for (let i = currentIndex + 1; i < currentRow.cells.length; i++) {
+                                        if (currentRow.cells[i].contentEditable === 'true') {
+                                            nextCell = currentRow.cells[i];
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (!nextCell) {
+                                    // Move to next row, first cell
+                                    const nextRow = currentRow.nextElementSibling;
+                                    if (nextRow) {
+                                        nextCell = Array.from(nextRow.cells).find(c => c.contentEditable === 'true');
+                                    }
+                                }
+                                
+                                if (nextCell) {
+                                    nextCell.focus();
+                                }
+                            }
+                        }
+                        
+                        // Enter key to move down
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            const currentRow = this.parentElement;
+                            const nextRow = currentRow.nextElementSibling;
+                            const currentIndex = Array.from(currentRow.cells).indexOf(this);
+                            
+                            if (nextRow) {
+                                const cells = Array.from(nextRow.cells);
+                                const samePositionCell = cells[currentIndex];
+                                if (samePositionCell && samePositionCell.contentEditable === 'true') {
+                                    samePositionCell.focus();
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Add listener to remove the modified class when cell is emptied
+                    cell.addEventListener('keyup', function(e) {
+                        if ((e.key === 'Delete' || e.key === 'Backspace') && this.textContent.trim() === '') {
+                            this.classList.remove('modified');
+                        }
+                    });
+                });
+                
+                // Setup cell selection functionality
+                setupCellSelection();
+            }
+            
+            // Audio functions
+            function loadAudioFile(file) {
+                if (!audioContext) {
+                    try {
+                        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                        audioContext = new AudioContext();
+                    } catch (e) {
+                        updateStatusMessage('Web Audio API is not supported in this browser');
+                        return;
+                    }
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const audioData = e.target.result;
+                    
+                    // Update status
+                    updateStatusMessage('Decoding audio...');
+                    
+                    // Decode the audio data
+                    audioContext.decodeAudioData(audioData, function(buffer) {
+                        audioBuffer = buffer;
+                        
+                        // Update audio info
+                        const duration = buffer.duration;
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = Math.floor(duration % 60);
+                        const frameCount = Math.ceil(duration * 24); // Assuming 24fps
+                        
+                        audioInfo.textContent = `${audioFileName} (${minutes}:${seconds.toString().padStart(2, '0')}, ${frameCount} frames @ 24fps)`;
+                        
+                        // Enable audio controls
+                        playAudioButton.disabled = false;
+                        stopAudioButton.disabled = false;
+                        audioScrubber.disabled = false;
+                        
+                        // Generate waveform visualization
+                        generateWaveformData(buffer);
+                        
+                        // Update status
+                        updateStatusMessage('Audio loaded: ' + audioFileName);
+                        
+                        // If the x-sheet has fewer frames than the audio, suggest increasing
+                        if (frameCount > frameCountInput.value) {
+                            if (confirm(`This audio is ${frameCount} frames long at 24fps, but your X-sheet only has ${frameCountInput.value} frames. Do you want to increase the frame count?`)) {
+                                frameCountInput.value = frameCount;
+                                frameCount = frameCount;
+                                generateTable(frameCount);
+                                renderWaveform();
+                            } else {
+                                renderWaveform();
+                            }
+                        } else {
+                            renderWaveform();
+                        }
+                    }, function(e) {
+                        updateStatusMessage('Error decoding audio: ' + e.message);
+                    });
+                };
+                
+                reader.onerror = function() {
+                    updateStatusMessage('Error reading audio file');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+            
+            function generateWaveformData(buffer) {
+                // Get the raw audio data from the buffer
+                const rawData = buffer.getChannelData(0); // Use first channel
+                
+                // Calculate how many samples we need for our visualization
+                const totalSamples = rawData.length;
+                
+                // Process for visualization - we need to reduce the resolution
+                // to make it efficient to display
+                waveformData = [];
+                
+                // Calculate desired number of points for the visualization
+                // For vertical waveform, we want more detail
+                const pointsPerSecond = 100; // Increase detail for vertical display
+                const totalPoints = Math.ceil(buffer.duration * pointsPerSecond);
+                
+                // Calculate step size
+                const step = Math.floor(totalSamples / totalPoints);
+                
+                // Build the waveform data array
+                for (let i = 0; i < totalPoints; i++) {
+                    const index = Math.floor(i * step);
+                    if (index < totalSamples) {
+                        // Get the absolute value for a nicer visual
+                        waveformData.push(Math.abs(rawData[index]));
+                    }
+                }
+            }
+            
+            function renderWaveform() {
+                if (!audioBuffer || waveformData.length === 0) return;
+                
+                // Clear existing markers and components
+                const existingMarkers = document.querySelectorAll('.waveform-marker');
+                existingMarkers.forEach(marker => marker.remove());
+                
+                const existingLabels = document.querySelectorAll('.phonetic-label');
+                existingLabels.forEach(label => label.remove());
+                
+                const existingContainer = document.querySelector('.waveform-container');
+                if (existingContainer) {
+                    existingContainer.remove();
+                }
+                
+                // Get the table and first waveform column cell for positioning
+                const table = document.getElementById('xsheet-table');
+                const firstCell = document.querySelector('.waveform-col[data-frame="1"]');
+                if (!firstCell) return;
+                
+                // Calculate total height needed for the waveform
+                const totalRows = document.querySelectorAll('tr[data-frame]').length;
+                const rowHeight = firstCell.offsetHeight;
+                const totalHeight = totalRows * rowHeight;
+                
+                // Create a container for the vertical waveform that spans the entire table
+                const waveformContainer = document.createElement('div');
+                waveformContainer.className = 'waveform-container';
+                
+                // Create a canvas for the waveform
+                const canvas = document.createElement('canvas');
+                canvas.className = 'waveform-canvas';
+                canvas.width = firstCell.offsetWidth;
+                canvas.height = totalHeight;
+                waveformContainer.appendChild(canvas);
+                
+                // Add overlay for event handling
+                const overlay = document.createElement('div');
+                overlay.className = 'waveform-overlay';
+                overlay.style.height = totalHeight + 'px';
+                
+                // Add event listener for clicking on the waveform
+                overlay.addEventListener('click', function(e) {
+                    if (!audioBuffer) return;
+                    
+                    const rect = overlay.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const percentage = y / rect.height;
+                    
+                    // Calculate time point in the audio
+                    const timePoint = percentage * audioBuffer.duration;
+                    
+                    // Update audio position
+                    audioScrubber.value = (timePoint / audioBuffer.duration) * 100;
+                    if (isPlaying) {
+                        stopAudio();
+                        startOffset = timePoint;
+                        playAudio();
+                    } else {
+                        startOffset = timePoint;
+                    }
+                    
+                    // Update the UI to show frame position
+                    updateFrameMarker();
+                });
+                
+                // Variables for scrubbing
+                let isScrubbing = false;
+                
+                // Add scrubbing functionality (dragging while holding mouse button)
+                overlay.addEventListener('mousedown', function(e) {
+                    if (!audioBuffer) return;
+                    if (e.button !== 0) return; // Only respond to left mouse button
+                    
+                    isScrubbing = true;
+                    
+                    // Pause any playing audio
+                    if (isPlaying) {
+                        pauseAudio();
+                    }
+                    
+                    // Create a scrub audio context if needed
+                    if (!audioContext) {
+                        try {
+                            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                            audioContext = new AudioContext();
+                        } catch (e) {
+                            console.error('Web Audio API not supported');
+                            return;
+                        }
+                    }
+                    
+                    // Initial scrub to current position
+                    updateScrubPosition(e);
+                    
+                    // Prevent text selection during drag
+                    e.preventDefault();
+                });
+                
+                // Handle scrubbing movement
+                overlay.addEventListener('mousemove', function(e) {
+                    if (!isScrubbing || !audioBuffer) return;
+                    updateScrubPosition(e);
+                });
+                
+                // Function to update position during scrubbing
+                function updateScrubPosition(e) {
+                    const rect = overlay.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const percentage = Math.max(0, Math.min(1, y / rect.height));
+                    
+                    // Calculate time point in the audio
+                    const timePoint = percentage * audioBuffer.duration;
+                    startOffset = timePoint;
+                    
+                    // Update audio scrubber
+                    audioScrubber.value = percentage * 100;
+                    
+                    // Play a short snippet of audio at this position
+                    playScrubAudio(timePoint);
+                    
+                    // Update the marker
+                    updateFrameMarker();
+                }
+                
+                // End scrubbing when mouse is released or leaves element
+                overlay.addEventListener('mouseup', function() {
+                    isScrubbing = false;
+                });
+                
+                overlay.addEventListener('mouseleave', function() {
+                    isScrubbing = false;
+                });
+                
+                // Function to play a short snippet at the scrub position
+                let scrubSource = null;
+                function playScrubAudio(timePoint) {
+                    if (scrubSource) {
+                        try {
+                            scrubSource.stop();
+                        } catch (e) {
+                            // Ignore errors when stopping already stopped source
+                        }
+                    }
+                    
+                    // Play a very short snippet at the current position
+                    scrubSource = audioContext.createBufferSource();
+                    scrubSource.buffer = audioBuffer;
+                    scrubSource.connect(audioContext.destination);
+                    
+                    // Play just a short snippet (equivalent to 1-2 frames at 24fps)
+                    const snippetDuration = 1/12; // 1/12 of a second (2 frames at 24fps)
+                    scrubSource.start(0, timePoint, snippetDuration);
+                }
+                
+                // Right-click to add phonetic marker
+                overlay.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    if (!audioBuffer) return;
+                    
+                    const rect = overlay.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const percentage = y / rect.height;
+                    
+                    // Calculate time point in the audio
+                    const timePoint = percentage * audioBuffer.duration;
+                    
+                    showPhoneticInput(timePoint);
+                    return false;
+                });
+                
+                waveformContainer.appendChild(overlay);
+                
+                // Add the container to the table
+                document.body.appendChild(waveformContainer);
+                
+                // Position the container over the waveform column
+                const tableRect = table.getBoundingClientRect();
+                const cellRect = firstCell.getBoundingClientRect();
+                
+                waveformContainer.style.left = (cellRect.left - 1) + 'px';
+                waveformContainer.style.top = (cellRect.top) + 'px';
+                waveformContainer.style.width = (cellRect.width) + 'px';
+                waveformContainer.style.height = totalHeight + 'px';
+                
+                // Draw the waveform on the canvas
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Clear and set background
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+                
+                // Calculate scaling factors
+                const totalDuration = audioBuffer.duration;
+                const framesPerSecond = 24;
+                const totalFrames = Math.ceil(totalDuration * framesPerSecond);
+                
+                // Draw center line
+                ctx.beginPath();
+                ctx.strokeStyle = '#cccccc';
+                ctx.moveTo(width / 2, 0);
+                ctx.lineTo(width / 2, height);
+                ctx.stroke();
+                
+                // Draw the waveform
+                ctx.beginPath();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                
+                // Map waveform data to vertical height
+                for (let i = 0; i < waveformData.length; i++) {
+                    const y = (i / waveformData.length) * height;
+                    const amplitude = waveformData[i] * (width * 0.4); // Scale amplitude to 40% of width
+                    const x = (width / 2) + amplitude;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                
+                // Draw mirrored waveform for visual effect
+                for (let i = waveformData.length - 1; i >= 0; i--) {
+                    const y = (i / waveformData.length) * height;
+                    const amplitude = waveformData[i] * (width * 0.4);
+                    const x = (width / 2) - amplitude;
+                    
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.stroke();
+                
+                // Draw frame markers
+                for (let i = 1; i <= totalFrames && i <= totalRows; i++) {
+                    const y = (i / totalRows) * height;
+                    
+                    // Draw horizontal line at frame boundary
+                    if (i % 8 === 0) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#999999';
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(width, y);
+                        ctx.stroke();
+                    }
+                }
+                
+                // Render phonetic markers
+                renderPhoneticMarkers();
+                
+                // Add the moving marker for current frame
+                updateFrameMarker();
+            }
+            
+            function renderPhoneticMarkers() {
+                if (!phonetics || !audioBuffer) return;
+                
+                // Get the waveform container
+                const waveformContainer = document.querySelector('.waveform-container');
+                if (!waveformContainer) return;
+                
+                // Get container dimensions
+                const containerHeight = waveformContainer.offsetHeight;
+                
+                // Add phonetic markers
+                phonetics.forEach(phonetic => {
+                    // Calculate vertical position based on time
+                    const percentage = phonetic.time / audioBuffer.duration;
+                    const yPosition = percentage * containerHeight;
+                    
+                    // Create and position the marker
+                    const label = document.createElement('div');
+                    label.className = 'phonetic-label';
+                    label.textContent = phonetic.text;
+                    label.style.position = 'absolute';
+                    label.style.left = '2px';
+                    label.style.top = yPosition + 'px';
+                    label.style.zIndex = '25';
+                    
+                    // Add event listener to edit the phonetic marker
+                    label.addEventListener('dblclick', function() {
+                        showPhoneticInput(phonetic.time, phonetic.text, phonetics.indexOf(phonetic));
+                    });
+                    
+                    waveformContainer.appendChild(label);
+                });
+            }
+            
+            function updateFrameMarker() {
+                if (!audioBuffer) return;
+                
+                // Remove existing markers
+                const existingMarkers = document.querySelectorAll('.waveform-marker');
+                existingMarkers.forEach(marker => marker.remove());
+                
+                // Calculate which frame we're on
+                const time = isPlaying ? 
+                    (audioContext.currentTime - startTime + startOffset) : 
+                    startOffset;
+                
+                const frame = Math.floor(time / frameDuration) + 1;
+                currentFrame = frame;
+                
+                // Get the waveform container
+                const waveformContainer = document.querySelector('.waveform-container');
+                if (!waveformContainer) return;
+                
+                // Calculate vertical position based on time
+                const containerHeight = waveformContainer.offsetHeight;
+                const percentage = time / audioBuffer.duration;
+                const yPosition = percentage * containerHeight;
+                
+                // Create horizontal marker line
+                const marker = document.createElement('div');
+                marker.className = 'waveform-marker';
+                marker.style.position = 'absolute';
+                marker.style.top = yPosition + 'px';
+                marker.style.left = '0';
+                marker.style.width = '100%';
+                marker.style.height = '2px';
+                marker.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+                marker.style.zIndex = '30';
+                
+                // Add frame number
+                marker.textContent = `Frame ${frame}`;
+                marker.style.lineHeight = '0';
+                marker.style.textAlign = 'right';
+                marker.style.color = 'red';
+                marker.style.fontWeight = 'bold';
+                marker.style.fontSize = '8pt';
+                
+                waveformContainer.appendChild(marker);
+                
+                // Scroll to the marker if it's not visible and if we're playing
+                if (isPlaying) {
+                    const table = document.getElementById('xsheet-table');
+                    const tableRect = table.getBoundingClientRect();
+                    const markerY = tableRect.top + yPosition;
+                    
+                    // Check if marker is outside visible area
+                    if (markerY < window.scrollY || markerY > window.scrollY + window.innerHeight) {
+                        window.scrollTo({
+                            top: markerY - (window.innerHeight / 2),
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+                
+                // Update scrubber position
+                if (audioBuffer) {
+                    const scrubPercentage = (time / audioBuffer.duration) * 100;
+                    audioScrubber.value = scrubPercentage;
+                }
+                
+                // If playing, schedule the next update
+                if (isPlaying) {
+                    requestAnimationFrame(updateFrameMarker);
+                }
+            }
+            
+            function togglePlayAudio() {
+                if (isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio();
+                }
+            }
+            
+            function playAudio() {
+                if (!audioBuffer) return;
+                
+                try {
+                    // Create a new source node
+                    audioSource = audioContext.createBufferSource();
+                    audioSource.buffer = audioBuffer;
+                    audioSource.connect(audioContext.destination);
+                    
+                    // Calculate start position
+                    startTime = audioContext.currentTime;
+                    
+                    // Start playback from the current offset
+                    audioSource.start(0, startOffset);
+                    isPlaying = true;
+                    
+                    // Set up animation loop
+                    updateFrameMarker();
+                    
+                    // Update UI
+                    playAudioButton.textContent = 'Pause';
+                    
+                    // Set up ended event
+                    audioSource.onended = function() {
+                        if (isPlaying) {
+                            stopAudio();
+                        }
+                    };
+                } catch (e) {
+                    updateStatusMessage('Error playing audio: ' + e.message);
+                }
+            }
+            
+            function pauseAudio() {
+                if (!isPlaying || !audioSource) return;
+                
+                // Stop the audio
+                audioSource.stop();
+                
+                // Calculate current position
+                startOffset += audioContext.currentTime - startTime;
+                
+                isPlaying = false;
+                
+                // Update UI
+                playAudioButton.textContent = 'Play';
+            }
+            
+            function stopAudio() {
+                if (audioSource) {
+                    try {
+                        audioSource.stop();
+                    } catch (e) {
+                        // Ignore errors when stopping already stopped source
+                    }
+                }
+                
+                isPlaying = false;
+                startOffset = 0;
+                
+                // Update UI
+                playAudioButton.textContent = 'Play';
+                audioScrubber.value = 0;
+                
+                // Clear frame marker
+                updateFrameMarker();
+            }
+            
+            function scrubAudio() {
+                if (!audioBuffer) return;
+                
+                // Calculate time from scrubber position
+                const percentage = audioScrubber.value / 100;
+                const newTime = percentage * audioBuffer.duration;
+                
+                // If playing, restart from new position
+                if (isPlaying) {
+                    pauseAudio();
+                    startOffset = newTime;
+                    playAudio();
+                } else {
+                    startOffset = newTime;
+                    updateFrameMarker();
+                }
+            }
+            
+            function showPhoneticInput(time, initialText = '', editIndex = -1) {
+                if (time === null) {
+                    // If no time provided, use current position
+                    time = isPlaying ? 
+                        (audioContext.currentTime - startTime + startOffset) : 
+                        startOffset;
+                }
+                
+                // Store position for later use
+                phoneticEditPosition = {
+                    time: time,
+                    editIndex: editIndex
+                };
+                
+                // Set initial text if editing existing marker
+                phoneticText.value = initialText;
+                
+                // Get the waveform container and calculate position
+                const waveformContainer = document.querySelector('.waveform-container');
+                if (waveformContainer) {
+                    const containerRect = waveformContainer.getBoundingClientRect();
+                    const containerHeight = waveformContainer.offsetHeight;
+                    const percentage = time / audioBuffer.duration;
+                    const yPosition = percentage * containerHeight;
+                    
+                    // Position the input near the click position
+                    phoneticInput.style.top = (containerRect.top + yPosition + window.scrollY) + 'px';
+                    phoneticInput.style.left = (containerRect.right + window.scrollX + 5) + 'px';
+                } else {
+                    // Default position if container not found
+                    phoneticInput.style.top = '200px';
+                    phoneticInput.style.left = '200px';
+                }
+                
+                // Show the input and focus it
+                phoneticInput.style.display = 'block';
+                phoneticText.focus();
+            }
+            
+            function savePhoneticMarker() {
+                if (!phoneticEditPosition) return;
+                
+                const text = phoneticText.value.trim();
+                if (text === '') {
+                    // If empty text and editing an existing marker, remove it
+                    if (phoneticEditPosition.editIndex >= 0) {
+                        phonetics.splice(phoneticEditPosition.editIndex, 1);
+                    }
+                } else {
+                    // Save or update the phonetic marker
+                    if (phoneticEditPosition.editIndex >= 0) {
+                        // Update existing
+                        phonetics[phoneticEditPosition.editIndex].text = text;
+                    } else {
+                        // Add new
+                        phonetics.push({
+                            time: phoneticEditPosition.time,
+                            text: text
+                        });
+                    }
+                }
+                
+                // Hide input
+                phoneticInput.style.display = 'none';
+                
+                // Re-render markers
+                renderWaveform();
+                
+                // Mark as modified
+                modified = true;
+            }
+            
+            function collectData() {
+                const data = {
+                    template: currentTemplate,
+                    frameCount: frameCount,
+                    metadata: {
+                        projectNumber: document.getElementById('project-number').value,
+                        date: document.getElementById('project-date').value,
+                        pageNumber: document.getElementById('page-number').value,
+                        animatorName: document.getElementById('animator-name').value,
+                        versionNumber: document.getElementById('version-number').value,
+                        shotNumber: document.getElementById('shot-number').value
+                    },
+                    audio: {
+                        fileName: audioFileName,
+                        phonetics: phonetics
+                    },
+                    rows: []
+                };
+                
+                // Collect data from all rows
+                const rows = tableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const rowData = {
+                        action: row.cells[0].innerText,
+                        frame: row.cells[1].innerText,
+                        // Skip waveform cell (2)
+                        dialogue: row.cells[3].innerText,
+                        sound: row.cells[4].innerText,
+                        technical: row.cells[5].innerText,
+                        extra1: row.cells[6].innerText,
+                        extra2: row.cells[7].innerText,
+                        frameRepeat: row.cells[8].innerText,
+                        camera: row.cells[9].innerText
+                    };
+                    data.rows.push(rowData);
+                });
+                
+                return data;
+            }
+            
+            function restoreData(data) {
+                if (!data) return;
+                
+                // Update template and frame count
+                currentTemplate = data.template || 'large';
+                frameCount = data.frameCount || 96;
+                
+                // Update UI to match
+                templateSelector.value = currentTemplate;
+                frameCountInput.value = frameCount;
+                
+                // Restore metadata
+                if (data.metadata) {
+                    document.getElementById('project-number').value = data.metadata.projectNumber || '';
+                    document.getElementById('project-date').value = data.metadata.date || '';
+                    document.getElementById('page-number').value = data.metadata.pageNumber || '';
+                    document.getElementById('animator-name').value = data.metadata.animatorName || '';
+                    document.getElementById('version-number').value = data.metadata.versionNumber || '';
+                    document.getElementById('shot-number').value = data.metadata.shotNumber || '';
+                }
+                
+                // Generate the table with the right frame count
+                generateTable(frameCount);
+                updateTemplate();
+                
+                // Restore audio data
+                if (data.audio) {
+                    audioFileName = data.audio.fileName || '';
+                    phonetics = data.audio.phonetics || [];
+                    
+                    if (audioBuffer && phonetics.length > 0) {
+                        renderWaveform();
+                    }
+                }
+                
+                // Restore row data
+                if (data.rows && data.rows.length > 0) {
+                    const rows = tableBody.querySelectorAll('tr');
+                    data.rows.forEach((rowData, index) => {
+                        if (index < rows.length) {
+                            rows[index].cells[0].innerText = rowData.action || '';
+                            // Don't restore frame number cells as they're auto-generated
+                            rows[index].cells[3].innerText = rowData.dialogue || '';
+                            rows[index].cells[4].innerText = rowData.sound || '';
+                            rows[index].cells[5].innerText = rowData.technical || '';
+                            rows[index].cells[6].innerText = rowData.extra1 || '';
+                            rows[index].cells[7].innerText = rowData.extra2 || '';
+                            // Don't restore the second frame number cell
+                            rows[index].cells[9].innerText = rowData.camera || '';
+                        }
+                    });
+                }
+                
+                modified = false;
+                updateStatusMessage('Project loaded successfully');
+            }
+            
+            function saveProject() {
+                const data = collectData();
+                
+                // Save to localStorage
+                try {
+                    localStorage.setItem('animationXSheet', JSON.stringify(data));
+                    modified = false;
+                    updateStatusMessage('Project saved successfully');
+                    
+                    // Also download as JSON file for backup
+                    const filename = projectName + '.json';
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", filename);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                } catch (e) {
+                    updateStatusMessage('Error saving project: ' + e.message);
+                }
+            }
+            
+            function loadProject() {
+                // First try to load from localStorage
+                try {
+                    const savedData = localStorage.getItem('animationXSheet');
+                    if (savedData) {
+                        restoreData(JSON.parse(savedData));
+                        return;
+                    }
+                } catch (e) {
+                    updateStatusMessage('Error loading saved project: ' + e.message);
+                }
+                
+                // If no localStorage data, create file input for uploading JSON
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+                
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            restoreData(data);
+                        } catch (error) {
+                            updateStatusMessage('Error parsing file: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+                
+                fileInput.click();
+                fileInput.remove();
+            }
+            
+            function exportToPDF() {
+                updateStatusMessage('Preparing PDF. Please wait...');
+                
+                // Remove controls temporarily for PDF generation
+                const controls = document.querySelector('.controls');
+                const audioControls = document.querySelector('#audio-controls');
+                const statusMsg = document.querySelector('.status');
+                const phoneticInputEl = document.querySelector('#phonetic-input');
+                
+                controls.style.display = 'none';
+                audioControls.style.display = 'none';
+                statusMsg.style.display = 'none';
+                phoneticInputEl.style.display = 'none';
+                
+                // Clean up any previous waveform elements
+                const previousContainers = document.querySelectorAll('.cell-waveform-window');
+                previousContainers.forEach(container => container.remove());
+                
+                // Draw the waveform directly into the cells
+                if (audioBuffer && waveformData.length > 0) {
+                    drawWaveformInCells();
+                }
+                
+                // Wait a moment for DOM updates to complete
+                setTimeout(() => {
+                    try {
+                        // Use html2canvas to capture the printable area
+                        html2canvas(document.getElementById('printable-area'), {
+                            scale: 2, // Higher resolution
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true
+                        }).then(canvas => {
+                            const imgData = canvas.toDataURL('image/png');
+                            
+                            // Determine PDF size based on template
+                            let pdfWidth, pdfHeight;
+                            if (currentTemplate === 'large') {
+                                // 11"x17"
+                                pdfWidth = 279.4; // mm
+                                pdfHeight = 431.8; // mm
+                            } else {
+                                // 8.5"x11"
+                                pdfWidth = 215.9; // mm
+                                pdfHeight = 279.4; // mm
+                            }
+                            
+                            // Create PDF with jsPDF
+                            const { jsPDF } = window.jspdf;
+                            const pdf = new jsPDF({
+                                orientation: 'portrait',
+                                unit: 'mm',
+                                format: [pdfWidth, pdfHeight]
+                            });
+                            
+                            // Calculate aspect ratio
+                            const imgWidth = pdfWidth - 20; // margins
+                            const imgHeight = canvas.height * imgWidth / canvas.width;
+                            
+                            // Add image to PDF
+                            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                            
+                            // Save PDF
+                            pdf.save(`${projectName}.pdf`);
+                            
+                            // Clean up after PDF generation
+                            cleanupAfterExport();
+                        });
+                    } catch (e) {
+                        // Clean up if there was an error
+                        cleanupAfterExport();
+                        updateStatusMessage('Error exporting PDF: ' + e.message);
+                    }
+                }, 100);
+                
+                function drawWaveformInCells() {
+                    const waveformCells = document.querySelectorAll('.waveform-col');
+                    if (waveformCells.length === 0) return;
+                    
+                    // Calculate the number of data points per frame
+                    const totalDuration = audioBuffer.duration;
+                    const pointsPerFrame = waveformData.length / (totalDuration * 24);
+                    
+                    // For each cell, draw its portion of the waveform
+                    waveformCells.forEach((cell, index) => {
+                        // Get the frame number (1-based)
+                        const frameNum = index + 1;
+                        
+                        // Create a canvas for this cell
+                        const canvas = document.createElement('canvas');
+                        canvas.width = cell.offsetWidth;
+                        canvas.height = cell.offsetHeight;
+                        canvas.style.display = 'block';
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                        
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Fill with white background
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw center line
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#cccccc';
+                        ctx.moveTo(canvas.width / 2, 0);
+                        ctx.lineTo(canvas.width / 2, canvas.height);
+                        ctx.stroke();
+                        
+                        // Calculate which section of the waveform to draw
+                        const startPoint = Math.floor((frameNum - 1) * pointsPerFrame);
+                        const endPoint = Math.floor(frameNum * pointsPerFrame);
+                        
+                        if (startPoint < waveformData.length) {
+                            // Draw this portion of the waveform
+                            ctx.beginPath();
+                            ctx.strokeStyle = '#000000';
+                            
+                            // Check if we have valid data to draw
+                            if (endPoint > startPoint) {
+                                // Map the waveform section to this cell
+                                for (let i = startPoint; i <= endPoint && i < waveformData.length; i++) {
+                                    // Calculate position within this cell
+                                    const relativePos = (i - startPoint) / (endPoint - startPoint);
+                                    const y = relativePos * canvas.height;
+                                    
+                                    // Draw waveform
+                                    const amplitude = waveformData[i] * (canvas.width * 0.4);
+                                    const x = (canvas.width / 2) + amplitude;
+                                    
+                                    if (i === startPoint) {
+                                        ctx.moveTo(x, y);
+                                    } else {
+                                        ctx.lineTo(x, y);
+                                    }
+                                }
+                                
+                                // Draw left side (mirror)
+                                for (let i = endPoint; i >= startPoint && i < waveformData.length; i--) {
+                                    const relativePos = (i - startPoint) / (endPoint - startPoint);
+                                    const y = relativePos * canvas.height;
+                                    
+                                    const amplitude = waveformData[i] * (canvas.width * 0.4);
+                                    const x = (canvas.width / 2) - amplitude;
+                                    
+                                    ctx.lineTo(x, y);
+                                }
+                                
+                                ctx.stroke();
+                            }
+                            
+                            // Look for phonetic markers that might be in this frame
+                            if (phonetics && phonetics.length > 0) {
+                                phonetics.forEach(phonetic => {
+                                    // Calculate which frame this phonetic marker belongs to
+                                    const frameOfMarker = Math.floor(phonetic.time / frameDuration) + 1;
+                                    
+                                    // If it's in this frame, draw it
+                                    if (frameOfMarker === frameNum) {
+                                        // Calculate position within cell
+                                        const posInFrameRatio = (phonetic.time - ((frameNum - 1) * frameDuration)) / frameDuration;
+                                        const yPos = posInFrameRatio * canvas.height;
+                                        
+                                        // Draw marker line
+                                        ctx.beginPath();
+                                        ctx.strokeStyle = '#ff0000';
+                                        ctx.lineWidth = 1;
+                                        ctx.moveTo(0, yPos);
+                                        ctx.lineTo(canvas.width, yPos);
+                                        ctx.stroke();
+                                        
+                                        // Add label if it fits
+                                        if (canvas.width > 30) {
+                                            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                                            const textWidth = ctx.measureText(phonetic.text).width;
+                                            if (textWidth < canvas.width - 4) {
+                                                ctx.fillRect(2, yPos - 8, textWidth + 4, 14);
+                                                ctx.fillStyle = '#ff0000';
+                                                ctx.font = '8px Arial';
+                                                ctx.fillText(phonetic.text, 4, yPos + 4);
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                        
+                        // Add frame number indicator
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        ctx.fillRect(0, 0, 18, 12);
+                        ctx.fillStyle = '#000000';
+                        ctx.font = '8px Arial';
+                        ctx.fillText(frameNum, 2, 8);
+                        
+                        // Clear cell content and add the canvas
+                        cell.innerHTML = '';
+                        cell.appendChild(canvas);
+                    });
+                }
+                
+                function cleanupAfterExport() {
+                    // Restore controls
+                    controls.style.display = 'flex';
+                    audioControls.style.display = 'flex';
+                    statusMsg.style.display = 'block';
+                    updateStatusMessage('PDF exported successfully');
+                    
+                    // Regenerate the table to restore normal interactive state
+                    generateTable(frameCount);
+                    
+                    // Re-render waveform if audio is loaded
+                    if (audioBuffer) {
+                        renderWaveform();
+                    }
+                }
+            }
+            
+            function printSheet() {
+                updateStatusMessage('Preparing to print. Please wait...');
+                
+                // Save current selection state
+                const selectedCellsData = saveSelectionState();
+                
+                // Hide the waveform container temporarily but don't remove it
+                const originalWf = document.querySelector('.waveform-container');
+                if (originalWf) {
+                    originalWf.style.display = 'none';
+                }
+                
+                // Draw the waveform directly into the cells before printing
+                if (audioBuffer && waveformData.length > 0) {
+                    drawWaveformInCells();
+                }
+                
+                // Wait a moment for DOM updates to complete
+                setTimeout(() => {
+                    window.print();
+                    
+                    // Clean up after printing
+                    setTimeout(() => {
+                        // Restore the original waveform container
+                        if (originalWf) {
+                            originalWf.style.display = '';
+                        }
+                        
+                        // Restore original cell content
+                        const waveformCells = document.querySelectorAll('.waveform-col');
+                        waveformCells.forEach(cell => {
+                            const originalContent = cell.getAttribute('data-original-content');
+                            if (originalContent !== null) {
+                                cell.innerHTML = originalContent;
+                                cell.removeAttribute('data-original-content');
+                            }
+                        });
+                        
+                        // Restore selection state
+                        restoreSelectionState(selectedCellsData);
+                        
+                        updateStatusMessage('Print complete');
+                    }, 500);
+                }, 100);
+                
+                function drawWaveformInCells() {
+                    const waveformCells = document.querySelectorAll('.waveform-col');
+                    if (waveformCells.length === 0) return;
+                    
+                    // Calculate the number of data points per frame
+                    const totalDuration = audioBuffer.duration;
+                    const pointsPerFrame = waveformData.length / (totalDuration * 24);
+                    
+                    // For each cell, draw its portion of the waveform
+                    waveformCells.forEach((cell, index) => {
+                        // Get the frame number (1-based)
+                        const frameNum = index + 1;
+                        
+                        // Create a canvas for this cell
+                        const canvas = document.createElement('canvas');
+                        canvas.width = cell.offsetWidth;
+                        canvas.height = cell.offsetHeight;
+                        canvas.style.display = 'block';
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                        
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Fill with white background
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw center line
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#cccccc';
+                        ctx.moveTo(canvas.width / 2, 0);
+                        ctx.lineTo(canvas.width / 2, canvas.height);
+                        ctx.stroke();
+                        
+                        // Calculate which section of the waveform to draw
+                        const startPoint = Math.floor((frameNum - 1) * pointsPerFrame);
+                        const endPoint = Math.floor(frameNum * pointsPerFrame);
+                        
+                        if (startPoint < waveformData.length) {
+                            // Draw this portion of the waveform
+                            ctx.beginPath();
+                            ctx.strokeStyle = '#000000';
+                            
+                            // Check if we have valid data to draw
+                            if (endPoint > startPoint) {
+                                // Map the waveform section to this cell
+                                for (let i = startPoint; i <= endPoint && i < waveformData.length; i++) {
+                                    // Calculate position within this cell
+                                    const relativePos = (i - startPoint) / (endPoint - startPoint);
+                                    const y = relativePos * canvas.height;
+                                    
+                                    // Draw waveform
+                                    const amplitude = waveformData[i] * (canvas.width * 0.4);
+                                    const x = (canvas.width / 2) + amplitude;
+                                    
+                                    if (i === startPoint) {
+                                        ctx.moveTo(x, y);
+                                    } else {
+                                        ctx.lineTo(x, y);
+                                    }
+                                }
+                                
+                                // Draw left side (mirror)
+                                for (let i = endPoint; i >= startPoint && i < waveformData.length; i--) {
+                                    const relativePos = (i - startPoint) / (endPoint - startPoint);
+                                    const y = relativePos * canvas.height;
+                                    
+                                    const amplitude = waveformData[i] * (canvas.width * 0.4);
+                                    const x = (canvas.width / 2) - amplitude;
+                                    
+                                    ctx.lineTo(x, y);
+                                }
+                                
+                                ctx.stroke();
+                            }
+                            
+                            // Look for phonetic markers that might be in this frame
+                            if (phonetics && phonetics.length > 0) {
+                                phonetics.forEach(phonetic => {
+                                    // Calculate which frame this phonetic marker belongs to
+                                    const frameOfMarker = Math.floor(phonetic.time / frameDuration) + 1;
+                                    
+                                    // If it's in this frame, draw it
+                                    if (frameOfMarker === frameNum) {
+                                        // Calculate position within cell
+                                        const posInFrameRatio = (phonetic.time - ((frameNum - 1) * frameDuration)) / frameDuration;
+                                        const yPos = posInFrameRatio * canvas.height;
+                                        
+                                        // Draw marker line
+                                        ctx.beginPath();
+                                        ctx.strokeStyle = '#ff0000';
+                                        ctx.lineWidth = 1;
+                                        ctx.moveTo(0, yPos);
+                                        ctx.lineTo(canvas.width, yPos);
+                                        ctx.stroke();
+                                        
+                                        // Add label if it fits
+                                        if (canvas.width > 30) {
+                                            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                                            const textWidth = ctx.measureText(phonetic.text).width;
+                                            if (textWidth < canvas.width - 4) {
+                                                ctx.fillRect(2, yPos - 8, textWidth + 4, 14);
+                                                ctx.fillStyle = '#ff0000';
+                                                ctx.font = '8px Arial';
+                                                ctx.fillText(phonetic.text, 4, yPos + 4);
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                        
+                        // Add frame number indicator
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        ctx.fillRect(0, 0, 18, 12);
+                        ctx.fillStyle = '#000000';
+                        ctx.font = '8px Arial';
+                        ctx.fillText(frameNum, 2, 8);
+                        
+                        // Store original content and add the canvas
+                        cell.setAttribute('data-original-content', cell.innerHTML);
+                        cell.innerHTML = '';
+                        cell.appendChild(canvas);
+                    });
+                }
+                
+                function saveSelectionState() {
+                    // Save information about which cells are selected
+                    return {
+                        selectedIndices: selectedCells.map(cell => {
+                            // Find the row and column of this cell
+                            const row = cell.closest('tr');
+                            const rowIndex = Array.from(tableBody.children).indexOf(row);
+                            const colIndex = Array.from(row.children).indexOf(cell);
+                            return { rowIndex, colIndex };
+                        })
+                    };
+                }
+                
+                function restoreSelectionState(selectionData) {
+                    if (!selectionData || !selectionData.selectedIndices) return;
+                    
+                    // Clear current selection
+                    clearCellSelection();
+                    
+                    // Restore selection
+                    selectionData.selectedIndices.forEach(index => {
+                        if (index.rowIndex >= 0 && index.rowIndex < tableBody.children.length) {
+                            const row = tableBody.children[index.rowIndex];
+                            if (index.colIndex >= 0 && index.colIndex < row.children.length) {
+                                const cell = row.children[index.colIndex];
+                                if (cell.contentEditable === 'true') {
+                                    toggleCellSelection(cell, true);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            function addEightRows() {
+                frameCount += 8;
+                frameCountInput.value = frameCount;
+                generateTable(frameCount);
+                updateStatusMessage('Added 8 rows. Total frames: ' + frameCount);
+                
+                // Re-render waveform if audio is loaded
+                if (audioBuffer) {
+                    renderWaveform();
+                }
+            }
+            
+            function clearSheet() {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    // Clear metadata
+                    document.getElementById('project-number').value = '';
+                    document.getElementById('page-number').value = '';
+                    document.getElementById('animator-name').value = '';
+                    document.getElementById('version-number').value = '';
+                    document.getElementById('shot-number').value = '';
+                    
+                    // Reset date to today
+                    document.getElementById('project-date').valueAsDate = new Date();
+                    
+                    // Clear all editable cells
+                    const editableCells = document.querySelectorAll('[contenteditable="true"]');
+                    editableCells.forEach(cell => {
+                        cell.innerText = '';
+                        cell.classList.remove('modified');
+                    });
+                    
+                    // Clear audio
+                    audioBuffer = null;
+                    audioSource = null;
+                    waveformData = [];
+                    phonetics = [];
+                    audioFileName = '';
+                    audioInfo.textContent = 'No audio loaded';
+                    
+                    // Stop any playing audio
+                    stopAudio();
+                    
+                    // Clear waveform visualization
+                    waveformCanvases.forEach(canvas => {
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    });
+                    
+                    // Clear phonetic markers
+                    const labels = document.querySelectorAll('.phonetic-label');
+                    labels.forEach(label => label.remove());
+                    
+                    modified = false;
+                    updateStatusMessage('Sheet cleared');
+                }
+            }
+            
+            function updateStatusMessage(message) {
+                statusMessage.textContent = message;
+                console.log(message);
+                
+                // Clear status message after 3 seconds
+                setTimeout(() => {
+                    if (statusMessage.textContent === message) {
+                        if (modified) {
+                            statusMessage.textContent = 'Unsaved changes';
+                        } else {
+                            statusMessage.textContent = '';
+                        }
+                    }
+                }, 3000);
+            }
+            
+            // Auto-save timer every 2 minutes
+            setInterval(() => {
+                if (modified) {
+                    try {
+                        const data = collectData();
+                        localStorage.setItem('animationXSheet_autosave', JSON.stringify(data));
+                        updateStatusMessage('Auto-saved');
+                    } catch (e) {
+                        console.error('Auto-save failed:', e);
+                    }
+                }
+            }, 120000);
+            
+            // Check for auto-saved data on load
+            try {
+                const autoSavedData = localStorage.getItem('animationXSheet_autosave');
+                if (autoSavedData && !localStorage.getItem('animationXSheet')) {
+                    if (confirm('Found auto-saved data. Would you like to restore it?')) {
+                        restoreData(JSON.parse(autoSavedData));
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking for auto-saved data:', e);
+            }
+            
+            // Initial status
+            updateStatusMessage('X-Sheet ready');
+        });
+    </script>
+</body>
+</html>
