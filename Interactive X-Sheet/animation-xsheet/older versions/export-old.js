@@ -26,137 +26,97 @@ window.XSheetApp.Export = window.XSheetApp.Export || {};
     function exportToPDF() {
         // Save the current state before PDF export
         const savedData = app.collectData();
-
+        
         app.updateStatusMessage('Preparing PDF. Please wait...');
-
+        
         // Prepare the document for export
         prepareForExport();
-
-        // Add a class to trigger print styles
-        document.body.classList.add('print-mode');
-
-        // Wait for print styles to be applied
+        
+        // Wait a moment for DOM updates to complete
         setTimeout(() => {
-            // Force layout recalculation
-            document.body.offsetHeight;
-
-            // Now recalculate drawing layer position with print styles applied
-            recalculateDrawingLayerPosition();
-
-            // Slight additional delay to ensure all styles are fully applied
-            setTimeout(() => {
-                try {
-                    // Use html2canvas to capture the printable area
-                    html2canvas(document.getElementById('printable-area'), {
-                        scale: 1.5,
-                        useCORS: true,
-                        logging: true,
-                        allowTaint: true,
-                        backgroundColor: '#ffffff'
-                    }).then(canvas => {
-                        try {
-                            const imgData = canvas.toDataURL('image/png');
-
-                            // Determine PDF size based on template
-                            let pdfWidth, pdfHeight;
-                            if (app.state.currentTemplate === 'large') {
-                                // 11"x17"
-                                pdfWidth = 279.4; // mm
-                                pdfHeight = 431.8; // mm
-                            } else {
-                                // 8.5"x11"
-                                pdfWidth = 215.9; // mm
-                                pdfHeight = 279.4; // mm
-                            }
-
-                            // Create PDF with jsPDF
-                            const { jsPDF } = window.jspdf;
-                            const pdf = new jsPDF({
-                                orientation: 'portrait',
-                                unit: 'mm',
-                                format: [pdfWidth, pdfHeight]
-                            });
-
-                            // Calculate aspect ratio
-                            const imgWidth = pdfWidth - 20; // margins
-                            const imgHeight = canvas.height * imgWidth / canvas.width;
-
-                            // Add image to PDF
-                            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-
-                            // Save PDF
-                            pdf.save(`${app.state.projectName}.pdf`);
-
-                            // Remove print mode class
-                            document.body.classList.remove('print-mode');
-
-                            // Clean up after PDF generation
-                            cleanupAfterExport(savedData);
-                        } catch (err) {
-                            document.body.classList.remove('print-mode');
-                            console.error('Error creating PDF:', err);
-                            cleanupAfterExport(savedData);
-                            app.updateStatusMessage('Error creating PDF: ' + err.message);
+            try {
+                // Use html2canvas to capture the printable area
+                html2canvas(document.getElementById('printable-area'), {
+                    scale: 1.5, // Lower scale factor for better performance
+                    useCORS: true,
+                    logging: true, // Enable for troubleshooting
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    try {
+                        const imgData = canvas.toDataURL('image/png');
+                        
+                        // Determine PDF size based on template
+                        let pdfWidth, pdfHeight;
+                        if (app.state.currentTemplate === 'large') {
+                            // 11"x17"
+                            pdfWidth = 279.4; // mm
+                            pdfHeight = 431.8; // mm
+                        } else {
+                            // 8.5"x11"
+                            pdfWidth = 215.9; // mm
+                            pdfHeight = 279.4; // mm
                         }
-                    }).catch(err => {
-                        document.body.classList.remove('print-mode');
-                        console.error('HTML2Canvas error:', err);
+                        
+                        // Create PDF with jsPDF
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF({
+                            orientation: 'portrait',
+                            unit: 'mm',
+                            format: [pdfWidth, pdfHeight]
+                        });
+                        
+                        // Calculate aspect ratio
+                        const imgWidth = pdfWidth - 20; // margins
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        
+                        // Add image to PDF
+                        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                        
+                        // Save PDF
+                        pdf.save(`${app.state.projectName}.pdf`);
+                        
+                        // Clean up after PDF generation
+                        cleanupAfterExport(savedData);
+                    } catch (err) {
+                        console.error('Error creating PDF:', err);
                         cleanupAfterExport(savedData);
                         app.updateStatusMessage('Error creating PDF: ' + err.message);
-                    });
-                } catch (e) {
-                    document.body.classList.remove('print-mode');
-                    // Clean up if there was an error
+                    }
+                }).catch(err => {
+                    console.error('HTML2Canvas error:', err);
                     cleanupAfterExport(savedData);
-                    app.updateStatusMessage('Error exporting PDF: ' + e.message);
-                }
-            }, 100); // Small additional delay for final style application
-        }, 500); // Initial delay for print style application
+                    app.updateStatusMessage('Error creating PDF: ' + err.message);
+                });
+            } catch (e) {
+                // Clean up if there was an error
+                cleanupAfterExport(savedData);
+                app.updateStatusMessage('Error exporting PDF: ' + e.message);
+            }
+        }, 1000); // Increased timeout for better reliability
     }
     
     // Print functionality
     function printSheet() {
         app.updateStatusMessage('Preparing to print. Please wait...');
-
+        
         // Save current selection state and cell contents
         const tableData = saveSelectionState();
-
+        
         // Record original body styles for restoration
         const originalBodyStyle = document.body.getAttribute('style') || '';
         const originalWidth = document.body.style.width;
         const originalHeight = document.body.style.height;
-
+        
         // Prepare the document for printing
         prepareForExport();
-
+        
         // Wait a moment for DOM updates to complete
         setTimeout(() => {
-            // Add a print class to the body to trigger print styles
-            document.body.classList.add('print-mode');
-
-            // Force reflow to apply print styles
-            document.body.offsetHeight;
-
-            // Recalculate drawing layer position with print styles applied
-            if (app.Drawing && app.Drawing.state.layerSystem) {
-                const layerContainer = app.Drawing.state.layerSystem.container;
-                const table = document.getElementById('xsheet-table');
-
-                // Update position based on table's position with print styles applied
-                layerContainer.style.top = table.offsetTop + 'px';
-                layerContainer.style.left = table.offsetLeft + 'px';
-                layerContainer.style.width = table.offsetWidth + 'px';
-                layerContainer.style.height = table.offsetHeight + 'px';
-            }
-
-            // Trigger the print dialog
             window.print();
-
+            
             // Clean up after printing
             setTimeout(() => {
-                // Remove print mode class
-                document.body.classList.remove('print-mode');
-
                 cleanupAfterPrint(tableData, originalBodyStyle, originalWidth, originalHeight);
                 app.updateStatusMessage('Print complete');
             }, 1000);
@@ -233,77 +193,44 @@ window.XSheetApp.Export = window.XSheetApp.Export || {};
         // 2) Make it visible for capture
         layerContainer.style.display = 'block';
 
-        // 3) Calculate position relative to the table - store the table reference for later
-        const table = document.getElementById('xsheet-table');
-        layerContainer._tableRef = table;
-
-        // 4) Move into the printable area - don't set position yet
+        // 3) Get the target elements
         const printableArea = document.getElementById('printable-area');
+        const table = document.getElementById('xsheet-table');
+
+        // 4) Reparent into the printable area
         printableArea.appendChild(layerContainer);
 
-        // Initial positioning will happen in recalculateDrawingLayerPosition()
-        // after print styles are applied
-    }
-
-    // New function to recalculate drawing layer position after print styles are applied
-    function recalculateDrawingLayerPosition() {
-        if (!app.Drawing || !app.Drawing.state.layerSystem) {
-            return;
-        }
-
-        const layerSystem = app.Drawing.state.layerSystem;
-        const layerContainer = layerSystem.container;
-        const table = layerContainer._tableRef || document.getElementById('xsheet-table');
-
-        if (!table) return;
-
-        // Now position using offset values from table
+        // 5) Force absolute positioning with direct table-based coordinates
+        // Use a more reliable positioning technique by getting the table's position within the printable area
         layerContainer.style.position = 'absolute';
-        layerContainer.style.top = table.offsetTop + 'px';
-        layerContainer.style.left = table.offsetLeft + 'px';
-        layerContainer.style.width = table.offsetWidth + 'px';
-        layerContainer.style.height = table.offsetHeight + 'px';
+        layerContainer.style.top = '0';
+        layerContainer.style.left = '0';
+        layerContainer.style.width = '100%';
+        layerContainer.style.height = '100%';
         layerContainer.style.zIndex = '1000';
-    }
 
-    // Print functionality
-    function printSheet() {
-        app.updateStatusMessage('Preparing to print. Please wait...');
+        // 6) Apply a transform to position the container exactly on the table
+        // This is more reliable than using separate top/left values
+        const tableRect = table.getBoundingClientRect();
+        const printableRect = printableArea.getBoundingClientRect();
 
-        // Save current selection state and cell contents
-        const tableData = saveSelectionState();
+        const offsetTop = tableRect.top - printableRect.top;
+        const offsetLeft = tableRect.left - printableRect.left;
 
-        // Record original body styles for restoration
-        const originalBodyStyle = document.body.getAttribute('style') || '';
-        const originalWidth = document.body.style.width;
-        const originalHeight = document.body.style.height;
+        // Use CSS transform for precise positioning
+        layerContainer.style.transform = `translate(${offsetLeft}px, ${offsetTop}px)`;
+        layerContainer.style.transformOrigin = '0 0';
 
-        // Prepare the document for printing
-        prepareForExport();
+        // 7) Also set a data attribute to store the table's size for any needed calculations
+        layerContainer.dataset.tableWidth = tableRect.width;
+        layerContainer.dataset.tableHeight = tableRect.height;
 
-        // Add a class to trigger print styles
-        document.body.classList.add('print-mode');
-
-        // Wait for print styles to be applied
-        setTimeout(() => {
-            // Force layout recalculation
-            document.body.offsetHeight;
-
-            // Now recalculate drawing layer position with print styles applied
-            recalculateDrawingLayerPosition();
-
-            // Trigger the print dialog
-            window.print();
-
-            // Clean up after printing
-            setTimeout(() => {
-                // Remove print mode class
-                document.body.classList.remove('print-mode');
-
-                cleanupAfterPrint(tableData, originalBodyStyle, originalWidth, originalHeight);
-                app.updateStatusMessage('Print complete');
-            }, 1000);
-        }, 500);
+        // 8) Force correct width and height on all canvases within the container
+        const canvases = layerContainer.querySelectorAll('canvas');
+        canvases.forEach(canvas => {
+            canvas.style.width = tableRect.width + 'px';
+            canvas.style.height = tableRect.height + 'px';
+        });
     }
     
     // Save selection state and cell contents
@@ -474,11 +401,19 @@ window.XSheetApp.Export = window.XSheetApp.Export || {};
         if (!app.Drawing || !app.Drawing.state.layerSystem) {
             return;
         }
-        
+
         const layerContainer = app.Drawing.state.layerSystem.container;
-        
+
         // Only restore if we saved original values
         if (layerContainer._originalParent) {
+            // Reset transform property
+            layerContainer.style.transform = '';
+            layerContainer.style.transformOrigin = '';
+
+            // Clear data attributes
+            delete layerContainer.dataset.tableWidth;
+            delete layerContainer.dataset.tableHeight;
+
             // Restore properties
             layerContainer.style.display = layerContainer._originalDisplay;
             layerContainer.style.position = layerContainer._originalPos;
@@ -487,10 +422,10 @@ window.XSheetApp.Export = window.XSheetApp.Export || {};
             layerContainer.style.zIndex = layerContainer._originalZIndex;
             layerContainer.style.width = layerContainer._originalWidth;
             layerContainer.style.height = layerContainer._originalHeight;
-            
+
             // Move back to original parent
             layerContainer._originalParent.appendChild(layerContainer);
-            
+
             // Clear temporary properties
             delete layerContainer._originalDisplay;
             delete layerContainer._originalPos;

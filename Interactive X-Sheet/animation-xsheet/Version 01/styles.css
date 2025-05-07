@@ -337,8 +337,6 @@ th {
 
 /* Print specific styles - fixed for better alignment */
 @media print {
-
-    /* Hide UI elements during print */
     .controls,
     button,
     #frame-count-container,
@@ -355,12 +353,10 @@ th {
     }
 
     @page {
-        size: portrait;
-        /* Fixed from auto to portrait */
+        size: portrait; /* Fixed from auto to portrait */
         margin: 0.5cm;
     }
 
-    /* Table print formatting */
     thead {
         display: table-header-group;
     }
@@ -371,12 +367,6 @@ th {
 
     tr {
         page-break-inside: avoid;
-    }
-
-    #printable-area {
-        position: relative !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
 
     /* Better waveform printing */
@@ -397,7 +387,7 @@ th {
         page-break-inside: avoid !important;
     }
 
-    /* Ensure the waveform clone prints correctly */
+    /* ensure the waveform clone prints correctly */
     .print-waveform-clone {
         display: block !important;
         position: absolute !important;
@@ -416,31 +406,44 @@ th {
     body>.waveform-container {
         display: none !important;
     }
-
-    /* Fixed drawing layer positioning for print - consolidated rules */
+    
     .drawing-layer-container {
         display: block !important;
         position: absolute !important;
         z-index: 1000 !important;
-        pointer-events: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        /* Remove any transform that might affect positioning */
-        transform: none !important;
     }
 
     .drawing-layer-container canvas {
         position: absolute !important;
-        pointer-events: none !important;
-        touch-action: none !important;
-        transform: none !important;
     }
-
-    /* Controls need to be above the drawing layer */
-    .controls,
-    #audio-controls {
-        position: relative;
-        z-index: 60;
-    }
+        .drawing-layer-container {
+            pointer-events: none !important;
+            position: absolute !important;
+            z-index: 5;
+        }
+    
+        .drawing-layer-container canvas {
+            pointer-events: none;
+            touch-action: none;
+        }
+    
+        /* Drawing toolbar needs to appear above the table but below popups */
+        .drawing-toolbar {
+            display: flex !important;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            z-index: 50;
+            position: relative;
+        }
+    
+        /* Controls need to be above the drawing layer */
+        .controls,
+        #audio-controls {
+            position: relative;
+            z-index: 60;
+        }
 }

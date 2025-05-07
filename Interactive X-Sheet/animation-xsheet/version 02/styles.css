@@ -373,10 +373,9 @@ th {
         page-break-inside: avoid;
     }
 
+    /* Ensure printable area has proper positioning context */
     #printable-area {
         position: relative !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
 
     /* Better waveform printing */
@@ -422,19 +421,17 @@ th {
         display: block !important;
         position: absolute !important;
         z-index: 1000 !important;
+        /* Consistent z-index */
         pointer-events: none !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
-        /* Remove any transform that might affect positioning */
-        transform: none !important;
     }
 
     .drawing-layer-container canvas {
         position: absolute !important;
         pointer-events: none !important;
         touch-action: none !important;
-        transform: none !important;
     }
 
     /* Controls need to be above the drawing layer */
