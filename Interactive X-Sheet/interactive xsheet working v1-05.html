@@ -3578,6 +3578,9 @@
             if (!window.xsheetDrawing || !window.xsheetDrawing.layerSystem) {
                 return originalExportToPDF ? originalExportToPDF() : null;
             }
+            // Override print to include drawings and compensate for 0.5cm page margin
+        const originalPrintSheet = window.printSheet;
+        
 
             // Save current state
             const layerContainer  = window.xsheetDrawing.layerSystem.container;
