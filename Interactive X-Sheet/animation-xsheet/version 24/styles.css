@@ -1,0 +1,670 @@
+/* ─────────────────────────────────────────────────────────────
+   Main Styling for Animation X‑Sheet
+   ───────────────────────────────────────────────────────────── */
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+    --primary-color: #4CAF50;
+    --primary-hover: #45a049;
+    --danger-color: #f44336;
+    --danger-hover: #d32f2f;
+    --info-color: #2196F3;
+    --info-hover: #0b7dda;
+    --accent-color: #9c27b0;
+    --accent-hover: #7b1fa2;
+
+    --border-color: #ccc;
+    --bg-light: #f5f5f5;
+    --bg-hover: #e6e6e6;
+    --text-color: #333;
+}
+
+/* ---------- Global / Reset ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+body {
+     margin: 0 !important;
+     padding: 0 !important;
+     background-color: white !important;
+     overflow: visible !important;
+    }
+/* Wrapper lets you centre the sheet in large viewports */
+
+#xsheet-wrapper {
+     margin: 0 !important;
+     max-width: 8.5in !important;
+     padding: 0 !important;
+     display: inline-block !important;
+    /* Keep all content together */
+      }
+/* Utility helper if you need to toggle things from JS */
+.hidden {
+    display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Controls (top‑bar buttons & inputs)
+   ───────────────────────────────────────────────────────────── */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-light);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.controls select,
+.controls input[type="number"],
+.controls input[type="date"],
+.controls button {
+    font-size: 9pt;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+/* Slightly narrower padding for native date inputs */
+.controls input[type="date"] {
+    padding: 5px 10px;
+}
+
+/* Default button look */
+.controls button {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color .25s;
+}
+
+.controls button:hover {
+    background: var(--primary-hover);
+}
+
+/* Variants referenced in your HTML/JS */
+#pdf-button {
+    background: var(--danger-color);
+}
+
+#pdf-button:hover {
+    background: var(--danger-hover);
+}
+
+#print-button {
+    background: var(--info-color);
+}
+
+#print-button:hover {
+    background: var(--info-hover);
+}
+
+#audio-button {
+    background: var(--accent-color);
+}
+
+#audio-button:hover {
+    background: var(--accent-hover);
+}
+
+/* Any other single‑ID buttons fall back to primary styling */
+#save-button,
+#load-button,
+#add-rows-button,
+#clear-button {
+    /* Explicitly reuse the base button look */
+    background: var(--primary-color);
+    color: #fff;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Sheet header & metadata
+   ───────────────────────────────────────────────────────────── */
+
+#printable-area {
+     width: 8.5in !important;
+     max-width: 8.5in !important;
+     margin: 0 auto !important;
+     padding: 0 !important;
+     border: none !important;
+     box-shadow: none !important;
+     overflow: visible !important;
+     display: inline-block !important;
+    /* Keep all content together */
+      }
+.header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+.header,
+.metadata {
+     margin-bottom: 0 !important;
+     padding-bottom: 0 !important;
+     }
+.title {
+    font-size: 14pt;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.metadata {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.metadata div {
+    border: 1px solid #000;
+    padding: 3px 5px;
+}
+
+.metadata span {
+    font-weight: 700;
+    margin-right: 5px;
+}
+
+.metadata input {
+    font: inherit;
+    border: none;
+    width: calc(100% - 70px);
+    /* allow room for label text */
+}
+
+/* ---------- Table ---------- */
+#xsheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border: 1px solid #000;
+    position: relative !important;
+    transform: none !important;
+    page-break-inside: avoid !important;
+}
+
+th,
+td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: top;
+    height: 20px;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+th {
+    background: #eee;
+    font-weight: 700;
+    text-align: center;
+    font-size: 9pt;
+}
+
+/* Column widths (adjust as needed) */
+.action-col {
+    width: 16%;
+}
+
+.frame-col {
+    width: 4%;
+    text-align: center;
+}
+
+.waveform-col {
+    width: 10%;
+    padding: 0;
+    position: relative;
+}
+
+.dialogue-col {
+    width: 10%;
+    text-align: center;
+}
+
+.sound-col {
+    width: 9%;
+    text-align: center;
+}
+
+.technical-col {
+    width: 9%;
+}
+
+.extra1-col {
+    width: 8%;
+}
+
+.extra2-col {
+    width: 8%;
+}
+
+.camera-col {
+    width: 12%;
+}
+
+/* ---------- Editable‑cell highlights ---------- */
+[contenteditable="true"] {
+    min-height: 18px;
+    cursor: text;
+}
+
+[contenteditable="true"]:focus {
+    background: #f0f7ff;
+    outline: 1px dotted var(--info-color);
+}
+
+[contenteditable="true"]:empty:before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.frame-number {
+    background: #e0e0e0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.modified {
+    background: #fffacd !important;
+}
+
+.selected-cell {
+    background: rgba(33, 150, 243, .25) !important;
+    outline: 1px solid var(--info-color);
+}
+
+/* ---------- Footer & Status ---------- */
+.footer {
+    font-size: 8pt;
+    text-align: center;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-style: italic;
+    min-height: 1.5em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Audio system
+   ───────────────────────────────────────────────────────────── */
+#audio-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 10px;
+    padding: 8px;
+    margin-top: 5px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+#audio-controls button {
+    padding: 4px 8px;
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#audio-controls button:hover {
+    background: var(--accent-hover);
+}
+
+#audio-info {
+    font-size: 8pt;
+    margin-left: 5px;
+}
+
+#audio-upload {
+    display: none;
+}
+
+#phonetic-input {
+    position: absolute;
+    z-index: 1001;
+    display: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+}
+
+/* Live waveform overlay */
+.waveform-container {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.waveform-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    z-index: 11;
+}
+
+.waveform-marker {
+    position: absolute;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.waveform-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.phonetic-label {
+    position: absolute;
+    z-index: 25;
+    background: rgba(255, 255, 255, .85);
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    font-size: 7pt;
+    padding: 1px 3px;
+    pointer-events: none;
+}
+
+.waveform-col canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Drawing system
+   ───────────────────────────────────────────────────────────── */
+#drawing-toolbar-container {
+    margin-bottom: 10px;
+}
+
+.drawing-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 8px;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    position: relative;
+    z-index: 50;
+}
+
+.drawing-toolbar button,
+.drawing-toolbar select {
+    font-size: 9pt;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 8px;
+    height: 32px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.drawing-toolbar button {
+    /* …other rules… */
+
+    /* smooth hover/focus states */
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.drawing-toolbar button:hover {
+    background: var(--bg-hover);
+}
+
+.drawing-toolbar button.active {
+    background: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--primary-hover);
+}
+
+.drawing-toolbar input[type="color"] {
+    width: 30px;
+    height: 30px;
+    padding: 1px;
+    border: 1px solid #ccc;
+    background: transparent;
+    cursor: pointer;
+}
+
+.drawing-toolbar label {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 2px;
+}
+
+.drawing-toolbar div {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* Drawing layer (absolute overlay) */
+.drawing-layer-container {
+     position: absolute !important;
+     pointer-events: none !important;
+     background-color: transparent !important;
+     z-index: 9999 !important;
+    /* GREATLY INCREASED z-index */
+     margin: 0 !important;
+     padding: 0 !important;
+     overflow: visible !important;
+     transform: none !important;
+     opacity: 1 !important;
+     display: block !important;
+     visibility: visible !important;
+    }
+.drawing-layer-container canvas {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    background: transparent !important;
+    pointer-events: none !important;
+    touch-action: none !important;
+    visibility: visible !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PRINT MEDIA QUERIES
+   ───────────────────────────────────────────────────────────── */
+@media print {
+
+    /* Hide UI chrome */
+    .controls,
+    #audio-controls,
+    .status,
+    #phonetic-input,
+    #drawing-toolbar-container,
+    .drawing-toolbar,
+    #audio-button,
+    #save-button,
+    #load-button,
+    #pdf-button,
+    #print-button,
+    #add-rows-button,
+    #clear-button {
+        display: none !important;
+    }
+
+    /* Ensure colours render */
+    body * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    #xsheet-wrapper {
+        margin: 0 !important;
+        max-width: 8.5in !important;
+        padding: 0 !important;
+    }
+
+    #printable-area {
+        width: 8.5in !important;
+        max-width: 8.5in !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+    }
+
+    .header,
+    .metadata {
+        margin-bottom: 5px !important;
+    }
+
+    #xsheet-table {
+        margin: 0 !important;
+        font-size: 7pt !important;
+        border: 1px solid #000 !important;
+        page-break-inside: avoid !important;
+    }
+
+    #xsheet-table th,
+    #xsheet-table td {
+        background: transparent !important;
+    }
+
+    .metadata input {
+        font-size: 7pt !important;
+    }
+
+    .waveform-col canvas {
+        image-rendering: crisp-edges !important;
+    }
+
+    .waveform-container {
+        display: none !important;
+    }
+
+    /* Keep drawing layer visible */
+    .drawing-layer-container,
+    .drawing-layer-container canvas {
+        background: transparent !important;
+        opacity: 1 !important;
+        position: absolute !important;
+        z-index: 1000 !important;
+        visibility: visible !important;
+    }
+
+    /* Page setup */
+    @page {
+        size: letter !important;
+        margin: 0.5cm !important;
+    }
+
+    .footer {
+        font-size: 6pt !important;
+        margin-top: 2px !important;
+        padding-top: 0 !important;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   HTML2Canvas / PDF export “print‑mode”
+   ───────────────────────────────────────────────────────────── */
+body.print-mode {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+}
+
+/* mirror the same UI‑hide rules used in @media print */
+body.print-mode .controls,
+body.print-mode #audio-controls,
+body.print-mode .status,
+body.print-mode #phonetic-input,
+body.print-mode #drawing-toolbar-container,
+body.print-mode .drawing-toolbar,
+body.print-mode #audio-button,
+body.print-mode #save-button,
+body.print-mode #load-button,
+body.print-mode #pdf-button,
+body.print-mode #print-button,
+body.print-mode #add-rows-button,
+body.print-mode #clear-button {
+    display: none !important;
+}
+
+body.print-mode #xsheet-wrapper {
+    margin: 0 !important;
+    max-width: 8.5in !important;
+    padding: 0 !important;
+}
+
+body.print-mode #printable-area {
+    width: 8.5in !important;
+    max-width: 8.5in !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+}
+
+body.print-mode #xsheet-table {
+    margin: 0 !important;
+    page-break-inside: avoid !important;
+}
+
+body.print-mode #xsheet-table th,
+body.print-mode #xsheet-table td {
+    page-break-inside: avoid !important;
+}
+
+body.print-mode .waveform-col canvas {
+    image-rendering: crisp-edges !important;
+}
+
+body.print-mode .waveform-container {
+    display: none !important;
+}
+
+body.print-mode .drawing-layer-container,
+body.print-mode .drawing-layer-container canvas {
+    background: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 1000 !important;
+}
+
+body.print-mode .header,
+body.print-mode .metadata {
+    margin-bottom: 5px !important;
+}
+
+body.print-mode .footer {
+    font-size: 6pt !important;
+    margin-top: 2px !important;
+    padding-top: 0 !important;
+}

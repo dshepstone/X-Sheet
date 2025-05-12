@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation X-Sheet</title>
+    <link rel="stylesheet" href="./styles.css">
+    <!-- External Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="controls">
+            <button id="refresh-template-button">Refresh Template</button>
+
+            <div id="frame-count-container">
+                <label for="frame-count">Frames:</label>
+                <input type="number" id="frame-count" min="24" step="8" value="48">
+            </div>
+
+            <button id="audio-button">Import Audio</button>
+            <input type="file" id="audio-upload" accept="audio/*">
+
+            <button id="save-button">Save Project</button>
+            <button id="load-button">Load Project</button>
+            <button id="pdf-button">Export PDF</button>
+            <button id="print-button">Print</button>
+            <button id="add-rows-button">Add 8 Rows</button>
+            <button id="clear-button">Clear All</button>
+        </div>
+
+        <div id="audio-controls">
+            <button id="play-audio">Play/Pause</button>
+            <button id="stop-audio">Stop</button>
+            <input type="range" id="audio-scrubber" min="0" max="100" value="0" style="width: 200px;">
+            <span id="audio-info">No audio loaded</span>
+            <button id="add-phonetic">Add Phonetic Marker</button>
+            <div style="margin-left: 10px; color: #666; font-style: italic;">
+                ✨ TIP: Drag down the waveform column while holding the left mouse button to scrub audio
+                frame-by-frame<br>
+                💡 TIP: Click and drag to select multiple cells (use Ctrl+C to copy, Delete to clear)
+            </div>
+        </div>
+
+        <div id="phonetic-input">
+            <input type="text" id="phonetic-text" placeholder="Enter phonetic sound">
+            <button id="save-phonetic">Save</button>
+            <button id="cancel-phonetic">Cancel</button>
+        </div>
+
+        <!-- Drawing toolbar container - explicitly positioned and styled -->
+        <div id="drawing-toolbar-container" style="display: block; width: 100%; margin: 10px auto;"></div>
+
+        <div class="content-wrapper">
+            <div id="printable-area">
+                <div class="header">
+                    <div class="title">ANIMATION X-SHEET</div>
+                </div>
+
+                <div class="metadata">
+                    <div><span>Project #:</span><input type="text" id="project-number"></div>
+                    <div><span>DATE:</span><input type="date" id="project-date"></div>
+                    <div><span>PAGE #:</span><input type="text" id="page-number"></div>
+                    <div><span>ANIMATOR:</span><input type="text" id="animator-name"></div>
+                    <div><span>VERSION:</span><input type="text" id="version-number"></div>
+                    <div><span>Shot #:</span><input type="text" id="shot-number"></div>
+                </div>
+
+                <table id="xsheet-table">
+                    <thead>
+                        <tr>
+                            <th class="action-col">Action/Description</th>
+                            <th class="frame-col">Fr</th>
+                            <th class="waveform-col">Audio Waveform</th>
+                            <th class="dialogue-col">Dialogue</th>
+                            <th class="sound-col">Sound FX</th>
+                            <th class="technical-col">Tech. Notes</th>
+                            <th class="extra1-col">Extra 1</th>
+                            <th class="extra2-col">Extra 2</th>
+                            <th class="frame-col">Fr</th>
+                            <th class="camera-col">Camera Moves</th>
+                        </tr>
+                    </thead>
+                    <tbody id="xsheet-body">
+                        <!-- Rows will be generated via JavaScript -->
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    Bold lines mark 8-frame intervals. Double lines mark 24-frame intervals (24fps).
+                    Left columns track character actions, middle columns for technical notes, right for camera moves.
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status-message"></div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="./core.js"></script>
+    <script src="./audio.js"></script>
+    <script src="./drawing.js"></script>
+    <script src="./export.js"></script>
+
+    <!-- Initialization script to handle loading errors -->
+    <script>
+        // Create a basic fallback initialization function
+        function fallbackInit() {
+            // Log that we're using the fallback
+            console.log("Using fallback initialization");
+
+            // Ensure the namespace exists
+            window.XSheetApp = window.XSheetApp || {};
+
+            // Create a basic state object if needed
+            window.XSheetApp.state = window.XSheetApp.state || {
+                frameCount: 48,
+                projectName: 'Animation_XSheet_' + new Date().toISOString().split('T')[0],
+                modified: false,
+                selectedCells: []
+            };
+
+            // Basic functions if they don't exist
+            if (!window.XSheetApp.generateTable) {
+                window.XSheetApp.generateTable = function (frames) {
+                    const tableBody = document.getElementById('xsheet-body');
+                    if (!tableBody) return;
+
+                    // Clear existing rows
+                    tableBody.innerHTML = '';
+
+                    // Generate rows
+                    for (let i = 1; i <= frames; i++) {
+                        const row = document.createElement('tr');
+                        row.className = `frame-${i}`;
+                        row.setAttribute('data-frame', i);
+
+                        // Add cells
+                        row.innerHTML = `
+                            <td class="action-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="frame-col frame-number" style="background-color: ${i === 1 ? '#00cc00' : '#cccccc'}">${i}</td>
+                            <td class="waveform-col" data-frame="${i}"></td>
+                            <td class="dialogue-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="sound-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="technical-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="extra1-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="extra2-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                            <td class="frame-col frame-number" style="background-color: ${i === 1 ? '#00cc00' : '#cccccc'}">${i}</td>
+                            <td class="camera-col" contenteditable="true" data-placeholder="" tabindex="0"></td>
+                        `;
+
+                        // Special styling for frame intervals
+                        if (i % 24 === 0) {
+                            row.style.borderBottom = '4px double #000';
+                        } else if (i % 8 === 0) {
+                            row.style.borderBottom = '2px solid #000';
+                        }
+
+                        tableBody.appendChild(row);
+                    }
+
+                    // Set today's date in the date field
+                    const dateField = document.getElementById('project-date');
+                    if (dateField) dateField.valueAsDate = new Date();
+                };
+            }
+
+            // Simple update message function
+            if (!window.XSheetApp.updateStatusMessage) {
+                window.XSheetApp.updateStatusMessage = function (message) {
+                    const statusElement = document.getElementById('status-message');
+                    if (statusElement) statusElement.textContent = message;
+                    console.log(message);
+                };
+            }
+
+            // Add event listeners to buttons
+            document.getElementById('refresh-template-button')?.addEventListener('click', function () {
+                window.XSheetApp.generateTable(window.XSheetApp.state.frameCount);
+                window.XSheetApp.updateStatusMessage('Template refreshed');
+            });
+
+            document.getElementById('add-rows-button')?.addEventListener('click', function () {
+                window.XSheetApp.state.frameCount += 8;
+                document.getElementById('frame-count').value = window.XSheetApp.state.frameCount;
+                window.XSheetApp.generateTable(window.XSheetApp.state.frameCount);
+                window.XSheetApp.updateStatusMessage('Added 8 rows');
+            });
+
+            document.getElementById('frame-count')?.addEventListener('change', function () {
+                const count = parseInt(this.value);
+                if (!isNaN(count) && count >= 8) {
+                    window.XSheetApp.state.frameCount = count;
+                    window.XSheetApp.generateTable(count);
+                    window.XSheetApp.updateStatusMessage('Frame count updated');
+                }
+            });
+
+            // Generate initial table
+            window.XSheetApp.generateTable(window.XSheetApp.state.frameCount);
+        }
+
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("DOM loaded, initializing application");
+
+            // Create namespace if it doesn't exist
+            window.XSheetApp = window.XSheetApp || {};
+
+            // Try to initialize with core.js init function
+            if (typeof window.XSheetApp.init === 'function') {
+                console.log("Using core.js initialization");
+                window.XSheetApp.init();
+            } else {
+                console.warn("Core.js initialization not available, using fallback");
+                fallbackInit();
+            }
+
+            // Initialize drawing system with a delay to ensure other components are loaded
+            setTimeout(function () {
+                console.log("Initializing drawing system");
+                if (window.XSheetApp.Drawing && typeof window.XSheetApp.Drawing.init === 'function') {
+                    window.XSheetApp.Drawing.init();
+                } else {
+                    console.warn("Drawing system not available, using fallback");
+                    initDrawingFallback();
+                }
+            }, 500);
+        });
+
+        // Drawing fallback initialization
+        function initDrawingFallback() {
+            const container = document.getElementById('drawing-toolbar-container');
+            if (!container) return;
+
+            // Create a simple toolbar
+            container.innerHTML = `
+                <div class="drawing-toolbar">
+                    <button title="Select" data-tool="select" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: #4CAF50; 
+                            color: white; cursor: pointer;">👆</button>
+                    <button title="Draw" data-tool="pen" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">✏️</button>
+                    <button title="Line" data-tool="line" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">—</button>
+                    <button title="Arrow" data-tool="arrow" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">→</button>
+                    <button title="Rectangle" data-tool="rectangle" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">□</button>
+                    <button title="Circle" data-tool="ellipse" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">○</button>
+                    <button title="Text" data-tool="text" style="width: 36px; height: 36px; font-size: 16px; 
+                            padding: 5px; border-radius: 4px; border: 1px solid #ccc; background-color: white; 
+                            color: black; cursor: pointer;">T</button>
+                    <div style="border-left: 1px solid #ccc; height: 30px;"></div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="drawing-color">Color:</label>
+                        <input type="color" id="drawing-color" value="#ff0000">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="drawing-line-width">Width:</label>
+                        <select id="drawing-line-width">
+                            <option value="1">1px</option>
+                            <option value="2" selected>2px</option>
+                            <option value="3">3px</option>
+                            <option value="5">5px</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+
+</html>

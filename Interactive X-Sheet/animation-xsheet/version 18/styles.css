@@ -1,0 +1,614 @@
+/* Main Styling for Animation X-Sheet */
+:root {
+    --primary-color: #4CAF50;
+    --primary-hover: #45a049;
+    --danger-color: #f44336;
+    --danger-hover: #d32f2f;
+    --info-color: #2196F3;
+    --info-hover: #0b7dda;
+    --accent-color: #9c27b0;
+    --accent-hover: #7b1fa2;
+    --border-color: #ccc;
+    --bg-light: #f5f5f5;
+    --bg-hover: #e6e6e6;
+    --text-color: #333;
+}
+
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.2;
+    margin: 0;
+    padding: 10px;
+    position: relative;
+    /* For absolute positioning of some popups if needed */
+}
+
+.controls {
+    background-color: var(--bg-light);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.controls select,
+.controls input[type="number"],
+/* Be more specific */
+.controls button {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 9pt;
+    /* Consistency */
+}
+
+.controls input[type="date"] {
+    /* Specific styling for date */
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 9pt;
+}
+
+
+.controls button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.controls button:hover {
+    background-color: var(--primary-hover);
+}
+
+#pdf-button {
+    background-color: var(--danger-color);
+}
+
+#pdf-button:hover {
+    background-color: var(--danger-hover);
+}
+
+#print-button {
+    background-color: var(--info-color);
+}
+
+#print-button:hover {
+    background-color: var(--info-hover);
+}
+
+#audio-button {
+    background-color: var(--accent-color);
+}
+
+#audio-button:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Printable Area & Header/Metadata */
+#printable-area {
+    position: relative !important;
+    /* Crucial for positioning drawing layer & print */
+    transform: none !important;
+    /* Avoid transforms interfering with calculations */
+    page-break-inside: avoid !important;
+    /* border: 1px solid #666; */
+    /* Optional: for visual debugging */
+    background-color: #fff;
+    /* Ensure printable area itself has white background */
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.title {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.metadata {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.metadata div {
+    border: 1px solid #000;
+    padding: 3px 5px;
+}
+
+.metadata span {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.metadata input {
+    border: none;
+    width: calc(100% - 70px);
+    /* Adjust width based on label */
+    font-family: inherit;
+    font-size: 9pt;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.metadata input[type="date"] {
+    width: auto;
+    padding: 1px;
+}
+
+/* Table Styling */
+#xsheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    position: relative !important;
+    transform: none !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #000;
+    /* Add outer border for clarity */
+}
+
+th,
+td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: top;
+    height: 20px;
+    overflow: hidden;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+th {
+    background-color: #eee;
+    font-weight: bold;
+    text-align: center;
+    font-size: 9pt;
+}
+
+/* Column Widths */
+.action-col {
+    width: 16%;
+}
+
+.frame-col {
+    width: 4%;
+    text-align: center;
+}
+
+.waveform-col {
+    width: 10%;
+    padding: 0;
+    position: relative;
+}
+
+.dialogue-col {
+    width: 10%;
+    text-align: center;
+}
+
+.sound-col {
+    width: 9%;
+    text-align: center;
+}
+
+.technical-col {
+    width: 9%;
+}
+
+.extra1-col {
+    width: 8%;
+}
+
+.extra2-col {
+    width: 8%;
+}
+
+.camera-col {
+    width: 12%;
+}
+
+/* Content Editable Cells */
+[contenteditable="true"] {
+    min-height: 18px;
+    cursor: text;
+    outline: none;
+}
+
+[contenteditable="true"]:focus {
+    background-color: #f0f7ff;
+    outline: 1px dotted var(--info-color);
+}
+
+[contenteditable="true"]:empty:before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.frame-number {
+    background-color: #e0e0e0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.modified {
+    background-color: #fffacd !important;
+}
+
+.selected-cell {
+    background-color: rgba(33, 150, 243, 0.25) !important;
+    outline: 1px solid var(--info-color) !important;
+}
+
+/* Footer */
+.footer {
+    font-size: 8pt;
+    text-align: center;
+    margin-top: 5px;
+    color: #333;
+    font-style: italic;
+}
+
+/* Status Message */
+.status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    font-style: italic;
+    color: #555;
+    min-height: 1.5em;
+}
+
+/* Audio System Styles */
+#audio-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    align-items: center;
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+#audio-controls button {
+    padding: 4px 8px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#audio-controls button:hover {
+    background-color: var(--accent-hover);
+}
+
+#audio-info {
+    font-size: 8pt;
+    color: #333;
+    margin-left: 5px;
+}
+
+#phonetic-input {
+    position: absolute;
+    z-index: 1001;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: none;
+}
+
+#audio-upload {
+    display: none;
+}
+
+.waveform-container {
+    /* Live waveform overlay */
+    position: absolute;
+    z-index: 4;
+    /* Below drawing layer */
+    pointer-events: none;
+    background: transparent;
+}
+
+.waveform-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+.waveform-marker {
+    /* Playback marker */
+    position: absolute;
+    pointer-events: none;
+    z-index: 30;
+}
+
+.waveform-canvas {
+    /* Live waveform canvas */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.phonetic-label {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    font-size: 7pt;
+    padding: 1px 3px;
+    z-index: 25;
+    pointer-events: none;
+}
+
+.waveform-col canvas {
+    /* Static waveform in cells for export */
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Drawing System Specific Styles */
+#drawing-toolbar-container {
+    margin-bottom: 10px;
+}
+
+.drawing-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 8px;
+    padding: 8px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    z-index: 50;
+    position: relative;
+}
+
+.drawing-toolbar button,
+.drawing-toolbar select {
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-size: 9pt;
+    height: 32px;
+    line-height: 20px;
+    box-sizing: border-box;
+}
+
+.drawing-toolbar button {
+    transition: background-color 0.2s, color 0.2s;
+    min-width: 36px;
+    text-align: center;
+}
+
+.drawing-toolbar button:hover {
+    background-color: var(--bg-hover);
+}
+
+.drawing-toolbar button.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-hover);
+}
+
+.drawing-toolbar input[type="color"] {
+    padding: 1px;
+    border: 1px solid #ccc;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    vertical-align: middle;
+    background-color: transparent;
+}
+
+.drawing-toolbar label {
+    border: none;
+    background-color: transparent;
+    padding: 0 2px;
+    height: 32px;
+    line-height: 32px;
+    vertical-align: middle;
+}
+
+.drawing-toolbar input[type="checkbox"] {
+    vertical-align: middle;
+    margin: 0 3px 0 0;
+}
+
+.drawing-toolbar div {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* Base Styles for Drawing Layer */
+.drawing-layer-container {
+    position: absolute !important;
+    z-index: 5 !important;
+    pointer-events: none !important;
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    opacity: 1 !important;
+    display: block !important;
+}
+
+.drawing-layer-container canvas {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    pointer-events: none;
+    touch-action: none;
+    background-color: transparent !important;
+    display: block;
+}
+
+/* Print Specific Styles (for @media print and body.print-mode for html2canvas) */
+@media print {
+
+    .controls,
+    #audio-controls,
+    .status,
+    #phonetic-input,
+    #drawing-toolbar-container,
+    .drawing-toolbar,
+    #audio-button,
+    #save-button,
+    #load-button,
+    #pdf-button,
+    #print-button,
+    #add-rows-button,
+    #clear-button {
+        display: none !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        font-size: 8pt;
+    }
+    #xsheet-wrapper {
+        margin: 0 auto;
+        /* Centers the wrapper on the page */
+        /* max-width and max-height will be set by JavaScript based on the template. */
+        /* You can add a temporary border for debugging to see its bounds: */
+        /* border: 1px dashed blue; */   
+    }
+
+    #printable-area {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+    }
+
+    #xsheet-table {
+        margin: 0 !important;
+        font-size: 7pt;
+        border: 1px solid #000 !important;
+    }
+
+    #xsheet-table th,
+    #xsheet-table td {
+        padding: 1px 2px !important;
+        height: auto !important;
+        page-break-inside: avoid !important;
+        border: 1px solid #666 !important;
+    }
+
+    .metadata input {
+        font-size: 7pt;
+    }
+
+    .waveform-col canvas {
+        image-rendering: crisp-edges;
+    }
+
+    .waveform-container {
+        display: none !important;
+    }
+
+    /* Hide live waveform */
+    .drawing-layer-container {
+        z-index: 1000 !important;
+        background-color: transparent !important;
+    }
+
+    .drawing-layer-container canvas {
+        image-rendering: crisp-edges;
+        background-color: transparent !important;
+    }
+
+    @page {
+        size: portrait;
+        margin: 0.8cm;
+    }
+}
+
+/* Styles for when body.print-mode is active (used by html2canvas) */
+body.print-mode .controls,
+body.print-mode #audio-controls,
+body.print-mode .status,
+body.print-mode #phonetic-input,
+body.print-mode #drawing-toolbar-container,
+body.print-mode .drawing-toolbar,
+body.print-mode #audio-button,
+body.print-mode #save-button,
+body.print-mode #load-button,
+body.print-mode #pdf-button,
+body.print-mode #print-button,
+body.print-mode #add-rows-button,
+body.print-mode #clear-button {
+    display: none !important;
+}
+
+body.print-mode #printable-area {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+}
+
+body.print-mode #xsheet-table {
+    margin: 0 !important;
+}
+
+body.print-mode #xsheet-table th,
+body.print-mode #xsheet-table td {
+    page-break-inside: avoid !important;
+}
+
+body.print-mode .waveform-col canvas {
+    image-rendering: crisp-edges;
+}
+
+body.print-mode .waveform-container {
+    display: none !important;
+}
+
+/* Hide live waveform */
+body.print-mode .drawing-layer-container {
+    z-index: 1000 !important;
+    background-color: transparent !important;
+}
+
+body.print-mode .drawing-layer-container canvas {
+    image-rendering: crisp-edges;
+    background-color: transparent !important;
+}
+

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Animation X-Sheet</title>
+    <link rel="stylesheet" href="./styles.css">
+    <!-- External Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="controls">
+        <div>
+            <label for="template-selector">Template:</label>
+            <select id="template-selector">
+                <option value="large">11"x17" (96 Frames)</option>
+                <option value="small">8"x10" (48 Frames)</option>
+            </select>
+        </div>
+
+        <div id="frame-count-container">
+            <label for="frame-count">Frames:</label>
+            <input type="number" id="frame-count" min="24" step="8" value="96">
+        </div>
+
+        <button id="audio-button">Import Audio</button>
+        <input type="file" id="audio-upload" accept="audio/*">
+
+        <button id="save-button">Save Project</button>
+        <button id="load-button">Load Project</button>
+        <button id="pdf-button">Export PDF</button>
+        <button id="print-button">Print</button>
+        <button id="add-rows-button">Add 8 Rows</button>
+        <button id="clear-button">Clear All</button>
+    </div>
+
+    <div id="audio-controls">
+        <button id="play-audio">Play/Pause</button>
+        <button id="stop-audio">Stop</button>
+        <input type="range" id="audio-scrubber" min="0" max="100" value="0" style="width: 200px;">
+        <span id="audio-info">No audio loaded</span>
+        <button id="add-phonetic">Add Phonetic Marker</button>
+        <div style="margin-left: 10px; color: #666; font-style: italic;">
+            ✨ TIP: Drag down the waveform column while holding the left mouse button to scrub audio frame-by-frame<br>
+            💡 TIP: Click and drag to select multiple cells (use Ctrl+C to copy, Delete to clear)
+        </div>
+    </div>
+
+    <div id="phonetic-input">
+        <input type="text" id="phonetic-text" placeholder="Enter phonetic sound">
+        <button id="save-phonetic">Save</button>
+        <button id="cancel-phonetic">Cancel</button>
+    </div>
+
+    <div id="drawing-toolbar-container">
+        <!-- Drawing toolbar will be inserted here by JavaScript -->
+    </div>
+
+    <div id="xsheet-wrapper">
+
+    <div id="printable-area">
+        <div class="header">
+            <div class="title">3D ANIMATION X-SHEET</div>
+        </div>
+
+        <div class="metadata">
+            <div><span>Project #:</span><input type="text" id="project-number"></div>
+            <div><span>DATE:</span><input type="date" id="project-date"></div>
+            <div><span>PAGE #:</span><input type="text" id="page-number"></div>
+            <div><span>ANIMATOR:</span><input type="text" id="animator-name"></div>
+            <div><span>VERSION:</span><input type="text" id="version-number"></div>
+            <div><span>Shot #:</span><input type="text" id="shot-number"></div>
+        </div>
+
+        <table id="xsheet-table">
+            <thead>
+                <tr>
+                    <th class="action-col">Action/Description</th>
+                    <th class="frame-col">Fr</th>
+                    <th class="waveform-col">Audio Waveform</th>
+                    <th class="dialogue-col">Dialogue</th>
+                    <th class="sound-col">Sound FX</th>
+                    <th class="technical-col">Tech. Notes</th>
+                    <th class="extra1-col">Extra 1</th>
+                    <th class="extra2-col">Extra 2</th>
+                    <th class="frame-col">Fr</th>
+                    <th class="camera-col">Camera Moves</th>
+                </tr>
+            </thead>
+            <tbody id="xsheet-body">
+                <!-- Rows will be generated via JavaScript -->
+            </tbody>
+        </table>
+
+        <div class="footer">
+            Bold lines mark 8-frame intervals. Double lines mark 24-frame intervals (24fps).
+            Left columns track character actions, middle columns for technical notes, right for camera moves.
+        </div>
+    </div>
+
+    <div class="status" id="status-message"></div>
+</div> <!-- Closing xsheet-wrapper -->
+    <!-- Application Scripts -->
+    <script src="./core.js" defer></script>
+    <script src="./audio.js" defer></script>
+    <script src="./drawing.js" defer></script>
+    <script src="./export.js" defer></script>
+    
+    <script>
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the core X-Sheet functionality
+            window.XSheetApp = window.XSheetApp || {};
+            window.XSheetApp.init();
+        });
+    </script>
+</body>
+</html>
